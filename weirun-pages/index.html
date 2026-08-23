@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WEIRUN — трекер для бега</title>
+  <meta name="description" content="WEIRUN — современный GPS-трекер для бега. Живая статистика, тренерские планы, архив забегов и достижения. Скоро в RuStore и AppGallery." />
+  <meta name="theme-color" content="#050d0a" />
+  <meta property="og:title" content="WEIRUN — трекер для бега" />
+  <meta property="og:description" content="Победы начинаются с тебя. Современный и быстрый трекер для бега." />
+  <meta property="og:image" content="og.jpg" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page" id="top">
+    <div class="noise" aria-hidden="true"></div>
+    <header class="top">
+      <div class="nav-bar" id="nav-bar">
+        <a class="brand" href="#top">
+          <img src="logo-mark.png" width="32" height="32" alt="" />
+          <span class="wordmark">WEIRUN</span>
+        </a>
+        <nav class="nav-links" aria-label="Разделы">
+          <a href="#features">Возможности</a>
+          <a href="#showcase">Экраны</a>
+          <a href="#download">Скачать</a>
+        </nav>
+        <div class="nav-actions">
+          <button type="button" class="btn btn-primary btn-sm btn-desk" data-apk>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            Скачать APK
+          </button>
+          <button type="button" class="icon-btn" id="menu-toggle" aria-expanded="false" aria-controls="mobile-nav" aria-label="Открыть меню">
+            <svg id="icon-menu" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+            <svg id="icon-close" hidden width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="mobile-nav glass-strong" id="mobile-nav">
+        <a href="#features">Возможности</a>
+        <a href="#showcase">Экраны</a>
+        <a href="#download">Скачать</a>
+        <button type="button" class="btn btn-primary btn-lg" style="width:100%;margin-top:0.5rem" data-apk>
+          Скачать APK
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <span class="soon"><span class="dot" aria-hidden="true"></span>Скоро релиз</span>
+          <img class="logo-lg" src="logo-mark.png" width="80" height="80" alt="" />
+          <div class="rule">
+            <span class="line"></span>
+            <p class="wordmark">Победы начинаются с тебя</p>
+            <span class="line"></span>
+          </div>
+          <p class="sub">Современный и быстрый трекер</p>
+          <h1 class="wordmark title">WEIRUN</h1>
+          <p class="headline">для бега</p>
+          <p class="lead">GPS-трекер, живая статистика, тренерские планы, архив забегов и до 100 достижений — в одном тёмном, быстром приложении.</p>
+          <div class="timer" data-countdown role="timer" aria-label="До релиза">
+            <div class="tick glass"><b data-k="days">––</b><small>Дни</small></div>
+            <div class="tick glass"><b data-k="hours">––</b><small>Часы</small></div>
+            <div class="tick glass"><b data-k="minutes">––</b><small>Минуты</small></div>
+            <div class="tick glass"><b data-k="seconds">––</b><small>Секунды</small></div>
+          </div>
+          <div class="cta-row">
+            <button type="button" class="start-orb" data-apk>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              <span>Скачать</span>
+            </button>
+            <div class="cta-side">
+              <a class="btn btn-ghost btn-lg" href="#features">Что внутри</a>
+              <p class="cta-note">Прямая загрузка APK. RuStore и AppGallery — в день релиза.</p>
+            </div>
+          </div>
+        </div>
+        <div class="phone-wrap">
+          <div class="phone-glow" aria-hidden="true"></div>
+          <div class="device">
+            <div class="device-screen">
+              <img src="screens/01.jpg" width="780" height="1420" alt="Главный экран WEIRUN" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="block wrap" id="features">
+        <div class="center">
+          <p class="kicker">Возможности</p>
+          <h2>Удобный трекер для любых дистанций, условий и целей</h2>
+        </div>
+        <div class="cards">
+          <article class="card glass">
+            <div class="icon-ring"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></div>
+            <h3>GPS-трекер</h3>
+            <p>Карта, готовность спутников и старт одной кнопкой. Пишет маршрут в любых условиях.</p>
+          </article>
+          <article class="card glass">
+            <div class="icon-ring"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <h3>Живая статистика</h3>
+            <p>Темп, время, шаги, набор высоты и калории — на одном экране во время забега.</p>
+          </article>
+          <article class="card glass">
+            <div class="icon-ring"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <h3>Тренерский хаб</h3>
+            <p>Подключение к тренеру по ID и недельные планы с прогрессом всегда под рукой.</p>
+          </article>
+          <article class="card glass">
+            <div class="icon-ring"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6"/></svg></div>
+            <h3>Профиль атлета</h3>
+            <p>Уровни, Runner ID, физические показатели и верифицированный социальный профиль.</p>
+          </article>
+          <article class="card glass">
+            <div class="icon-ring"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></div>
+            <h3>Архив треков</h3>
+            <p>Вся история забегов: поиск, фильтры по дистанции, темп, скорость и шаги.</p>
+          </article>
+          <article class="card glass">
+            <div class="icon-ring"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
+            <h3>Аналитика</h3>
+            <p>Прогресс и форма за всё время, год, 30 и 7 дней — без лишнего шума.</p>
+          </article>
+          <article class="card glass">
+            <div class="icon-ring"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .172.16.0.4 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></div>
+            <h3>До 100 достижений</h3>
+            <p>Дистанция, серии дней, темп — цели разного уровня сложности и опыт за каждую.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="block" id="showcase">
+        <div class="center wrap">
+          <p class="kicker">Интерфейс</p>
+          <h2>Вся история забегов в одном месте</h2>
+          <p class="muted">Тёмные стеклянные экраны, лаймовый акцент и шум — как в самом приложении.</p>
+        </div>
+        <div class="rail">
+          <div class="fade-l"></div>
+          <div class="fade-r"></div>
+          <div class="shots">
+            <figure><div class="device"><div class="device-screen"><img src="screens/01.jpg" alt="Главный экран WEIRUN со стартом и картой" /></div></div><figcaption>Старт</figcaption></figure>
+            <figure><div class="device"><div class="device-screen"><img src="screens/02.jpg" alt="Экран записи забега с живой статистикой" /></div></div><figcaption>Трекинг</figcaption></figure>
+            <figure><div class="device"><div class="device-screen"><img src="screens/03.jpg" alt="Подключение к тренеру и недельный план" /></div></div><figcaption>Тренер</figcaption></figure>
+            <figure><div class="device"><div class="device-screen"><img src="screens/04.jpg" alt="Профиль атлета и основные данные" /></div></div><figcaption>Профиль</figcaption></figure>
+            <figure><div class="device"><div class="device-screen"><img src="screens/05.jpg" alt="Архив треков и история забегов" /></div></div><figcaption>Архив</figcaption></figure>
+            <figure><div class="device"><div class="device-screen"><img src="screens/06.jpg" alt="Аналитика прогресса и формы" /></div></div><figcaption>Аналитика</figcaption></figure>
+            <figure><div class="device"><div class="device-screen"><img src="screens/07.jpg" alt="Достижения и уровни сложности" /></div></div><figcaption>Достижения</figcaption></figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="block wrap" id="download">
+        <div class="dl-card glass">
+          <div class="dl-glow" aria-hidden="true"></div>
+          <div class="dl-grid">
+            <div class="dl">
+              <img class="logo-md" src="logo-mark.png" width="56" height="56" alt="" />
+              <p class="kicker">Релиз</p>
+              <h2>Скачай WEIRUN</h2>
+              <p class="lead">Победы начинаются с тебя. Прямая установка APK — без ожидания витрин. Магазины подключим в день запуска.</p>
+              <div class="timer" data-countdown role="timer" aria-label="До релиза">
+                <div class="tick glass"><b data-k="days">––</b><small>Дни</small></div>
+                <div class="tick glass"><b data-k="hours">––</b><small>Часы</small></div>
+                <div class="tick glass"><b data-k="minutes">––</b><small>Минуты</small></div>
+                <div class="tick glass"><b data-k="seconds">––</b><small>Секунды</small></div>
+              </div>
+              <div class="dl-actions">
+                <button type="button" class="btn btn-primary btn-lg" data-apk>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                  Скачать APK
+                </button>
+                <a class="btn btn-outline btn-lg" href="#showcase">Смотреть экраны</a>
+              </div>
+            </div>
+            <div class="stores">
+              <p>Скоро в магазинах приложений</p>
+              <div class="store-row">
+                <a class="store glass" href="https://www.rustore.ru/" target="_blank" rel="noreferrer">
+                  <span class="mark mark-rs" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path fill="#fff" d="M7 6.5h4.2c2.4 0 3.8 1.3 3.8 3.2 0 1.4-.8 2.4-2 2.9l2.4 4.9h-2.5l-2.2-4.6H9.2V17.5H7V6.5Zm2.2 1.8v3.2h1.8c1.2 0 1.9-.5 1.9-1.6s-.7-1.6-1.9-1.6H9.2Z"/></svg></span>
+                  <span><b>RuStore</b><small>Скоро</small></span>
+                </a>
+                <a class="store glass" href="https://appgallery.huawei.com/" target="_blank" rel="noreferrer">
+                  <span class="mark mark-ag" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path fill="#fff" d="M7 8.2c0-1.8 1.6-3.2 5-3.2s5 1.4 5 3.2c0 1.2-.7 2.1-1.9 2.6 1.4.5 2.3 1.5 2.3 2.9 0 2-1.7 3.5-5.4 3.5S6.6 15.7 6.6 13.7c0-1.4.9-2.4 2.3-2.9C7.7 10.3 7 9.4 7 8.2Zm2.3.2c0 .8.8 1.3 2.7 1.3s2.7-.5 2.7-1.3-.8-1.3-2.7-1.3-2.7.5-2.7 1.3Zm-.1 4.8c0 .9.9 1.5 3 1.5s3-.6 3-1.5-.9-1.4-3-1.4-3 .6-3 1.4Z"/></svg></span>
+                  <span><b>AppGallery</b><small>Скоро</small></span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap foot">
+        <div>
+          <a class="brand" href="#top">
+            <img src="logo-mark.png" width="32" height="32" alt="" />
+            <span class="wordmark">WEIRUN</span>
+          </a>
+          <p>Победы начинаются с тебя. Современный GPS-трекер для бега — карта, тренер, архив и достижения.</p>
+        </div>
+        <nav aria-label="Подвал">
+          <a href="#features">Возможности</a>
+          <a href="#showcase">Экраны</a>
+          <a href="#download">Скачать</a>
+        </nav>
+      </div>
+      <div class="wrap legal">
+        <p>© 2026 WEIRUN. Все права защищены.</p>
+        <p>RuStore · AppGallery · APK</p>
+      </div>
+    </footer>
+  </div>
+  <div class="toast glass-strong" id="toast" role="status"><b></b><span></span></div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "WEIRUN — трекер для бега",
+      "hasCanvas": false,
+      "bodyTextLen": 1674,
+      "bodyTextHash": "96010d74c6e004ed9f9bb31e9aba3be077384da5a7ff3e45d20d3f8b36b8fbd6",
+      "bodyTextPrefix": "WEIRUN Возможности Экраны Скачать Скачать APK СКОРО РЕЛИЗ ПОБЕДЫ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "WEIRUN — трекер для бега",
+      "hasCanvas": false,
+      "bodyTextLen": 1635,
+      "bodyTextHash": "7e39680ad185049481bc54701a79da8ecc48b287a3c7f2aa57021dec85700000",
+      "bodyTextPrefix": "WEIRUN СКОРО РЕЛИЗ ПОБЕДЫ НАЧИНАЮТСЯ С ТЕБЯ СОВРЕМЕННЫЙ И БЫСТРЫ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}

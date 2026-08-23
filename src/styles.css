@@ -1,0 +1,254 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #050d0a;
+  --color-foreground: #f3f6ef;
+  --color-card: #0c1a14;
+  --color-card-foreground: #f3f6ef;
+  --color-primary: #c8f808;
+  --color-primary-foreground: #0a1408;
+  --color-muted: #8b9a8c;
+  --color-muted-foreground: #8b9a8c;
+  --color-border: #1c3328;
+  --color-ring: #c8f808;
+  --color-danger: #ff3b4e;
+  --color-forest: #0a2418;
+  --color-forest-deep: #020806;
+
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Manrope", ui-sans-serif, sans-serif;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+
+  --tracking-brand: 0.22em;
+  --tracking-section: 0.14em;
+
+  --shadow-border: 0 0 0 1px color-mix(in oklab, var(--color-foreground) 10%, transparent);
+  --shadow-border-hover: 0 0 0 1px color-mix(in oklab, var(--color-foreground) 16%, transparent);
+  --shadow-glass:
+    0 0 0 1px color-mix(in oklab, var(--color-foreground) 10%, transparent),
+    0 18px 40px -24px rgb(0 0 0 / 0.7);
+  --shadow-lime:
+    0 0 0 1px color-mix(in oklab, var(--color-primary) 40%, transparent),
+    0 12px 36px -10px color-mix(in oklab, var(--color-primary) 40%, transparent);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@layer components {
+  .page-shell {
+    position: relative;
+    isolation: isolate;
+    min-height: 100dvh;
+    overflow-x: clip;
+    background:
+      radial-gradient(1100px 720px at 88% -8%, #124a32 0%, transparent 58%),
+      radial-gradient(900px 640px at 8% 12%, #0a2a1c 0%, transparent 52%),
+      radial-gradient(800px 500px at 50% 110%, #0c2418 0%, transparent 55%),
+      linear-gradient(180deg, #07160f 0%, #050d0a 42%, #020806 100%);
+    color: var(--color-foreground);
+  }
+
+  .noise-layer {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    opacity: 0.11;
+    background-image: url("/noise.png");
+    background-repeat: repeat;
+    background-size: 180px 180px;
+    mix-blend-mode: overlay;
+  }
+
+  .glass {
+    background: color-mix(in oklab, var(--color-card) 72%, transparent);
+    backdrop-filter: blur(22px) saturate(1.25);
+    -webkit-backdrop-filter: blur(22px) saturate(1.25);
+    box-shadow: var(--shadow-glass);
+  }
+
+  .glass-strong {
+    background: color-mix(in oklab, var(--color-card) 82%, transparent);
+    backdrop-filter: blur(28px) saturate(1.3);
+    -webkit-backdrop-filter: blur(28px) saturate(1.3);
+    box-shadow: var(--shadow-glass);
+  }
+
+  .hairline {
+    box-shadow: var(--shadow-border);
+  }
+
+  .device {
+    background: #070a08;
+    border-radius: 36px;
+    padding: 10px;
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--color-foreground) 10%, transparent),
+      0 40px 80px -24px rgb(0 0 0 / 0.75),
+      0 0 80px -28px color-mix(in oklab, var(--color-primary) 28%, transparent);
+  }
+
+  .device-screen {
+    overflow: hidden;
+    border-radius: 26px;
+    background: #050505;
+  }
+
+  .device-screen img {
+    display: block;
+    width: 100%;
+    height: auto;
+    outline: 1px solid color-mix(in oklab, var(--color-foreground) 10%, transparent);
+    outline-offset: -1px;
+  }
+
+  .start-orb {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    width: 9.5rem;
+    height: 9.5rem;
+    border-radius: 9999px;
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    box-shadow: var(--shadow-lime);
+    transition-property: transform, filter, box-shadow;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .start-orb:hover {
+    filter: brightness(1.06);
+  }
+
+  .start-orb:active {
+    transform: scale(0.96);
+  }
+
+  .start-orb svg {
+    margin-left: 2px;
+  }
+
+  .section-kicker {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: var(--tracking-section);
+    text-transform: uppercase;
+    color: var(--color-primary);
+  }
+
+  .wordmark {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: var(--tracking-brand);
+    text-transform: uppercase;
+  }
+
+  .logo-glow {
+    filter: drop-shadow(0 0 28px color-mix(in oklab, var(--color-primary) 35%, transparent));
+  }
+
+  .soon-pill {
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-primary) 40%, transparent);
+  }
+
+  .soon-pill .dot {
+    animation: pulse-dot 1.8s ease-in-out infinite;
+  }
+
+  .icon-ring {
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-primary) 28%, transparent);
+  }
+
+  .store-rustore {
+    background: #0077ff;
+  }
+
+  .store-gallery {
+    background: #cf0a2c;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--color-primary) 35%, transparent) transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .noise-layer {
+    opacity: 0.07;
+  }
+
+  .start-orb,
+  .start-orb:hover,
+  .start-orb:active {
+    transition: none;
+    transform: none;
+    filter: none;
+  }
+
+  .soon-pill .dot {
+    animation: none;
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
