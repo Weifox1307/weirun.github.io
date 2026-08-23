@@ -26,21 +26,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22' # Обновили версию до 22
           cache: 'npm'
           
       - name: Install dependencies
-        run: npm ci
+        run: npm install # Заменили npm ci на npm install
         
       - name: Build the project
-        # Эта команда запустит сборку сайта (по умолчанию сгенерирует папку dist)
         run: npm run build
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Если твой фреймворк собирает файлы не в dist, а в другую папку 
-          # (например, .vercel/output/static), укажи её здесь вместо './dist'
           path: './dist'
 
   deploy:
