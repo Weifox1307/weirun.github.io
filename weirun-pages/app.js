@@ -1,4 +1,4 @@
-const LAUNCH_AT = new Date("2026-09-15T12:00:00+03:00").getTime();
+const LAUNCH_AT = new Date("2026-08-25T12:00:00+03:00").getTime();
 const APK = "weirun.apk";
 
 const $ = (sel, root = document) => root.querySelector(sel);
