@@ -1,7 +1,7 @@
 const LAUNCH_AT = new Date("2026-08-25T12:00:00+03:00").getTime();
 // Ссылка на APK из GitHub Releases (не из папки репозитория).
 // Пример: https://github.com/LOGIN/REPO/releases/latest/download/WEIRUN.apk
-const APK_URL = "";
+const APK_URL = "https://github.com/Weifox1307/weirun.github.io/releases/download/v1.0.0/WEIRUN.apk";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
