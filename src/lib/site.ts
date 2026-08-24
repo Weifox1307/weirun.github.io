@@ -4,9 +4,11 @@ export const SITE = {
   kicker: "Современный и быстрый трекер",
   headline: "для бега",
   description:
-    "GPS-трекер, живая статистика, тренерские планы, история забегов и достижений — в одном приложении.",
+    "GPS-трекер, статистика, тренерские планы, история забегов и многое другое — в одном приложении.",
   launchAt: "2026-08-25T12:00:00+03:00",
-  apkUrl: "/weirun.apk",
+  // GitHub Releases, not the repo tree. Example:
+  // https://github.com/LOGIN/REPO/releases/latest/download/WEIRUN.apk
+  apkUrl: "",
   apkFileName: "WEIRUN.apk",
   rustoreUrl: "https://www.rustore.ru/",
   appgalleryUrl: "https://appgallery.huawei.com/",
@@ -41,7 +43,7 @@ export const FEATURES = [
   {
     id: "profile",
     title: "Профиль атлета",
-    text: "Уровни, Runner ID, физические показатели и верифицированный профиль.",
+    text: "Уровни, Runner ID, физические показатели и верифицированный социальный профиль.",
     icon: "user",
   },
   {
@@ -58,7 +60,7 @@ export const FEATURES = [
   },
   {
     id: "achievements",
-    title: "Зал Славы",
+    title: "До 100 достижений",
     text: "Дистанция, серии дней, темп — цели разного уровня сложности и опыт за каждую.",
     icon: "medal",
   },
@@ -69,7 +71,7 @@ export const SCREENS = [
   { src: "/screens/02.jpg", alt: "Экран записи забега с живой статистикой", caption: "Трекинг" },
   { src: "/screens/03.jpg", alt: "Подключение к тренеру и недельный план", caption: "Тренер" },
   { src: "/screens/04.jpg", alt: "Профиль атлета и основные данные", caption: "Профиль" },
-  { src: "/screens/05.jpg", alt: "История забегов", caption: "Журнал тренировок" },
-  { src: "/screens/06.jpg", alt: "Статистика", caption: "Статистика" },
+  { src: "/screens/05.jpg", alt: "Архив треков и история забегов", caption: "Архив" },
+  { src: "/screens/06.jpg", alt: "Аналитика прогресса и формы", caption: "Аналитика" },
   { src: "/screens/07.jpg", alt: "Достижения и уровни сложности", caption: "Достижения" },
 ] as const;
