@@ -1,5 +1,7 @@
 const LAUNCH_AT = new Date("2026-08-25T12:00:00+03:00").getTime();
-const APK = "weirun.apk";
+// Ссылка на APK из GitHub Releases (не из папки репозитория).
+// Пример: https://github.com/LOGIN/REPO/releases/latest/download/WEIRUN.apk
+const APK_URL = "";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -42,22 +44,19 @@ function toast(title, text) {
   toast._t = setTimeout(() => el.classList.remove("show"), 4200);
 }
 
-async function downloadApk() {
-  try {
-    const res = await fetch(APK, { method: "HEAD" });
-    if (!res.ok) {
-      toast("APK появится в день релиза", "Положи weirun.apk в корень сайта — кнопка заработает сама.");
-      return;
-    }
-    const a = document.createElement("a");
-    a.href = APK;
-    a.download = "WEIRUN.apk";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  } catch {
-    toast("APK появится в день релиза", "Не удалось скачать файл. Попробуй позже.");
+function downloadApk() {
+  const url = (APK_URL || "").trim();
+  if (!url) {
+    toast("APK появится в день релиза", "Загрузи файл в GitHub Releases и вставь ссылку в APK_URL.");
+    return;
   }
+  const a = document.createElement("a");
+  a.href = url;
+  a.rel = "noopener";
+  a.download = "WEIRUN.apk";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 function setupNav() {
@@ -93,5 +92,5 @@ document.addEventListener("DOMContentLoaded", () => {
   renderTimers();
   setInterval(renderTimers, 1000);
   setupNav();
-  $$("[data-apk]").forEach((el) => el.addEventListener("click", () => void downloadApk()));
+  $$("[data-apk]").forEach((el) => el.addEventListener("click", downloadApk));
 });
