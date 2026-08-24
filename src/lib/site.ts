@@ -8,7 +8,7 @@ export const SITE = {
   launchAt: "2026-08-25T12:00:00+03:00",
   // GitHub Releases, not the repo tree. Example:
   // https://github.com/LOGIN/REPO/releases/latest/download/WEIRUN.apk
-  apkUrl: "",
+  apkUrl: "https://github.com/Weifox1307/weirun.github.io/releases/download/v1.0.0/WEIRUN.apk",
   apkFileName: "WEIRUN.apk",
   rustoreUrl: "https://www.rustore.ru/",
   appgalleryUrl: "https://appgallery.huawei.com/",
