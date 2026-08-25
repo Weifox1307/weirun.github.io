@@ -1,6 +1,5 @@
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Countdown } from "@/components/landing/countdown";
 import { StoreBadges } from "@/components/landing/store-badges";
 import { ApkLink } from "@/components/landing/apk-download";
 import { LogoMark } from "@/components/landing/logo";
@@ -21,10 +20,8 @@ export function DownloadSection() {
               Скачай WEIRUN
             </h2>
             <p className="mt-4 max-w-md text-base leading-relaxed text-muted">
-              Победы начинаются с тебя. APK уже можно ставить. RuStore и AppGallery
-              подключим следом.
+              Победы начинаются с тебя. APK уже доступен для скачивания. Также приложение доступно в RuStore.
             </p>
-            <Countdown className="mt-8 max-w-lg" />
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Button asChild size="lg">
                 <ApkLink>
