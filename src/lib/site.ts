@@ -6,8 +6,6 @@ export const SITE = {
   description:
     "GPS-трекер, статистика, тренерские планы, история забегов и многое другое — в одном приложении.",
   launchAt: "2026-08-25T11:15:00+03:00",
-  // GitHub Releases, not the repo tree. Example:
-  // https://github.com/LOGIN/REPO/releases/latest/download/WEIRUN.apk
   apkUrl: "https://github.com/Weifox1307/weirun.github.io/releases/download/v1.0.0/WEIRUN.apk",
   apkFileName: "WEIRUN.apk",
   rustoreUrl: "https://www.rustore.ru/",
