@@ -1,24 +1,40 @@
+import { forwardRef, type ReactNode } from "react";
 import { toast } from "sonner";
 import { SITE } from "@/lib/site";
+import { cn } from "@/lib/utils";
 
-export async function downloadApk() {
-  try {
-    const res = await fetch(SITE.apkUrl, { method: "HEAD" });
-    if (!res.ok) {
-      toast.message("APK появится в день релиза", {
-        description: "А пока следи за обратным отсчётом — файл подключится сюда же.",
-      });
-      return;
-    }
-    const link = document.createElement("a");
-    link.href = SITE.apkUrl;
-    link.download = SITE.apkFileName;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  } catch {
+export const APK_HREF = SITE.apkUrl.trim();
+
+export function openApk() {
+  if (!APK_HREF) {
     toast.message("APK появится в день релиза", {
-      description: "Не удалось скачать файл. Попробуй ещё раз позже.",
+      description: "Файл ещё не опубликован.",
     });
+    return;
   }
+  window.open(APK_HREF, "_blank", "noopener,noreferrer");
 }
+
+export const ApkLink = forwardRef<
+  HTMLAnchorElement,
+  { className?: string; children: ReactNode }
+>(function ApkLink({ className, children }, ref) {
+  if (!APK_HREF) {
+    return (
+      <button type="button" className={className} onClick={openApk}>
+        {children}
+      </button>
+    );
+  }
+  return (
+    <a
+      ref={ref}
+      className={cn("no-underline", className)}
+      href={APK_HREF}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {children}
+    </a>
+  );
+});
