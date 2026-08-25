@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Countdown } from "@/components/landing/countdown";
 import { LogoMark } from "@/components/landing/logo";
 import { PhoneFrame } from "@/components/landing/phone-frame";
-import { downloadApk } from "@/components/landing/apk-download";
+import { ApkLink } from "@/components/landing/apk-download";
+import { StatusPill } from "@/components/landing/status-pill";
 import { SITE } from "@/lib/site";
 
 export function Hero() {
@@ -11,10 +12,7 @@ export function Hero() {
     <section className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 pb-16 pt-6 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:pb-24 lg:pt-10">
       <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
         <div className="mb-6 flex items-center gap-3">
-          <span className="soon-pill inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium uppercase tracking-section text-primary">
-            <span className="dot size-1.5 rounded-full bg-primary" aria-hidden />
-            Скоро релиз
-          </span>
+          <StatusPill />
         </div>
 
         <LogoMark className="logo-glow mb-5 h-16 w-16 sm:h-20 sm:w-20" />
@@ -41,16 +39,16 @@ export function Hero() {
         <Countdown className="mt-8 w-full max-w-md lg:max-w-lg" />
 
         <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row lg:items-center">
-          <button type="button" className="start-orb" onClick={() => void downloadApk()}>
+          <ApkLink className="start-orb">
             <Download className="size-7" strokeWidth={2.2} />
             <span className="text-sm">Скачать</span>
-          </button>
+          </ApkLink>
           <div className="flex flex-col items-center gap-3 sm:items-start">
             <Button asChild variant="ghost" size="lg">
               <a href="#features">Что внутри</a>
             </Button>
-            <p className="max-w-[16rem] text-xs leading-relaxed text-muted">
-              Прямая загрузка APK. RuStore и AppGallery — в день релиза.
+            <p className="max-w-64 text-xs leading-relaxed text-muted">
+              Прямая установка APK. RuStore и AppGallery — скоро.
             </p>
           </div>
         </div>
