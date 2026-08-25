@@ -1,4 +1,4 @@
-const LAUNCH_AT = new Date("2026-08-25T12:00:00+03:00").getTime();
+const LAUNCH_AT = new Date("2026-08-25T11:15:00+03:00").getTime();
 // Ссылка на APK из GitHub Releases (не из папки репозитория).
 // Пример: https://github.com/LOGIN/REPO/releases/latest/download/WEIRUN.apk
 const APK_URL = "https://github.com/Weifox1307/weirun.github.io/releases/download/v1.0.0/WEIRUN.apk";
