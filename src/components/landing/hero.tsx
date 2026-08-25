@@ -1,6 +1,5 @@
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Countdown } from "@/components/landing/countdown";
 import { LogoMark } from "@/components/landing/logo";
 import { PhoneFrame } from "@/components/landing/phone-frame";
 import { ApkLink } from "@/components/landing/apk-download";
@@ -36,8 +35,6 @@ export function Hero() {
           {SITE.description}
         </p>
 
-        <Countdown className="mt-8 w-full max-w-md lg:max-w-lg" />
-
         <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row lg:items-center">
           <ApkLink className="start-orb">
             <Download className="size-7" strokeWidth={2.2} />
@@ -48,7 +45,7 @@ export function Hero() {
               <a href="#features">Что внутри</a>
             </Button>
             <p className="max-w-64 text-xs leading-relaxed text-muted">
-              Прямая установка APK. RuStore и AppGallery — скоро.
+              Прямая установка APK. RuStore и AppGallery подключены.
             </p>
           </div>
         </div>
