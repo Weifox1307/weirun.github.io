@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Download, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LogoLockup } from "@/components/landing/logo";
-import { downloadApk } from "@/components/landing/apk-download";
+import { ApkLink } from "@/components/landing/apk-download";
 import { NAV } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -56,14 +56,11 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            size="sm"
-            className="hidden sm:inline-flex"
-            onClick={() => void downloadApk()}
-          >
-            <Download className="size-4" />
-            Скачать APK
+          <Button asChild size="sm" className="hidden sm:inline-flex">
+            <ApkLink>
+              <Download className="size-4" />
+              Скачать APK
+            </ApkLink>
           </Button>
           <Button
             type="button"
@@ -96,16 +93,11 @@ export function SiteHeader() {
                 {item.label}
               </a>
             ))}
-            <Button
-              type="button"
-              className="mt-2 w-full"
-              onClick={() => {
-                setOpen(false);
-                void downloadApk();
-              }}
-            >
-              <Download className="size-4" />
-              Скачать APK
+            <Button asChild className="mt-2 w-full">
+              <ApkLink>
+                <Download className="size-4" />
+                Скачать APK
+              </ApkLink>
             </Button>
           </nav>
         </div>
