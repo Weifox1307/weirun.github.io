@@ -2,7 +2,7 @@ import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Countdown } from "@/components/landing/countdown";
 import { StoreBadges } from "@/components/landing/store-badges";
-import { downloadApk } from "@/components/landing/apk-download";
+import { ApkLink } from "@/components/landing/apk-download";
 import { LogoMark } from "@/components/landing/logo";
 
 export function DownloadSection() {
@@ -21,14 +21,16 @@ export function DownloadSection() {
               Скачай WEIRUN
             </h2>
             <p className="mt-4 max-w-md text-base leading-relaxed text-muted">
-              Победы начинаются с тебя. Прямая установка APK — без ожидания витрин.
-              Магазины подключим в день запуска.
+              Победы начинаются с тебя. APK уже можно ставить. RuStore и AppGallery
+              подключим следом.
             </p>
             <Countdown className="mt-8 max-w-lg" />
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Button type="button" size="lg" onClick={() => void downloadApk()}>
-                <Download className="size-5" />
-                Скачать APK
+              <Button asChild size="lg">
+                <ApkLink>
+                  <Download className="size-5" />
+                  Скачать APK
+                </ApkLink>
               </Button>
               <Button asChild variant="outline" size="lg">
                 <a href="#showcase">Смотреть экраны</a>
