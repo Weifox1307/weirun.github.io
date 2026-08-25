@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { LogoMark } from "@/components/landing/logo";
 import { PhoneFrame } from "@/components/landing/phone-frame";
 import { ApkLink } from "@/components/landing/apk-download";
-import { StatusPill } from "@/components/landing/status-pill";
 import { SITE } from "@/lib/site";
 
 export function Hero() {
@@ -11,7 +10,10 @@ export function Hero() {
     <section className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 pb-16 pt-6 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:pb-24 lg:pt-10">
       <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
         <div className="mb-6 flex items-center gap-3">
-          <StatusPill />
+          <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_40%,transparent)]">
+            <span className="size-1.5 rounded-full bg-primary" />
+            <span>Релиз доступен</span>
+          </div>
         </div>
 
         <LogoMark className="logo-glow mb-5 h-16 w-16 sm:h-20 sm:w-20" />
