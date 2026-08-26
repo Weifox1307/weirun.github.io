@@ -1,175 +1,107 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
-import { Play, Square, Pause, Navigation, CloudLightning, Sun, Cloud, CloudRain, Heart, Activity, Flame, Clock } from "lucide-react";
+import { Play, Square, Pause, Flame, Clock, Activity, Footprints, Heart, Navigation } from "lucide-react";
 import Map, { Marker, Source, Layer } from "react-map-gl";
 import maplibreGl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { supabase } from "@/lib/supabase";
-import { getDistanceMeters, formatDuration, formatStopwatch, calculatePace } from "@/lib/utils";
+import { formatStopwatch, calculatePace } from "@/lib/utils";
+import { useTracker } from "@/lib/useTracker";
 
 export const Route = createFileRoute("/home")({ component: Home });
 
 function Home() {
   const [userId, setUserId] = useState<string | null>(null);
   const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
-  const [city, setCity] = useState("Определение...");
-  const [weather, setWeather] = useState<{ temp: number; code: number } | null>(null);
-  const [gpsStatus, setGpsStatus] = useState<"Поиск" | "Готов" | "Ошибка">("Поиск");
-
-  // Состояния трекера
-  const [runState, setRunState] = useState<"idle" | "running" | "paused">("idle");
-  const [path, setPath] = useState<number[][]>([]); 
-  const [distanceMeters, setDistanceMeters] = useState(0);
   
-  // Высокоточный таймер
-  const [elapsedTimeMs, setElapsedTimeMs] = useState(0);
-  const startTimeRef = useRef<number>(0);
-  const accumulatedTimeRef = useRef<number>(0);
-  const timerRef = useRef<number | null>(null);
-  const watchIdRef = useRef<number | null>(null);
+  // Подключаем наш мощный хук трекинга
+  const { runState, distance, elapsedTimeMs, path, steps, currentPaceSec, startRun, pauseRun, stopRun } = useTracker();
 
-  const [lastRun, setLastRun] = useState<any>(null);
+  // Логика кнопки "Долгое нажатие для стопа"
+  const [stopProgress, setStopProgress] = useState(0);
+  const stopIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user?.id) {
-        setUserId(data.session.user.id);
-        supabase.from('cloud_runs').select('*').eq('user_id', data.session.user.id).order('timestamp', { ascending: false }).limit(1)
-          .then(({ data: runs }) => { if (runs && runs.length > 0) setLastRun(runs[0]); });
-      }
-    });
-
+    supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user?.id || null));
     if ("geolocation" in navigator) {
-      watchIdRef.current = navigator.geolocation.watchPosition(
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lon = pos.coords.longitude;
-          setLocation({ lat, lon });
-          setGpsStatus("Готов");
-          
-          if (!weather) fetchCityAndWeather(lat, lon); 
-
-          if (runState === "running") {
-            setPath(prev => {
-              const newPath = [...prev, [lon, lat]];
-              if (prev.length > 0) {
-                const [prevLon, prevLat] = prev[prev.length - 1];
-                const dist = getDistanceMeters(prevLat, prevLon, lat, lon);
-                setDistanceMeters(d => d + dist);
-              }
-              return newPath;
-            });
-          }
-        },
-        (err) => { console.error(err); setGpsStatus("Ошибка"); },
-        { enableHighAccuracy: true, maximumAge: 0 }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+        () => {}, { enableHighAccuracy: true }
       );
     }
+  }, []);
 
-    return () => {
-      if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
-      if (timerRef.current) cancelAnimationFrame(timerRef.current);
-    };
-  }, [runState, weather]);
-
-  // Запуск высокоточного таймера через requestAnimationFrame для плавности
-  useEffect(() => {
-    if (runState === "running") {
-      const updateTimer = () => {
-        setElapsedTimeMs(accumulatedTimeRef.current + (Date.now() - startTimeRef.current));
-        timerRef.current = requestAnimationFrame(updateTimer);
-      };
-      timerRef.current = requestAnimationFrame(updateTimer);
-    } else if (timerRef.current) {
-      cancelAnimationFrame(timerRef.current);
-    }
-    return () => { if (timerRef.current) cancelAnimationFrame(timerRef.current); };
-  }, [runState]);
-
-  const fetchCityAndWeather = async (lat: number, lon: number) => {
-    try {
-      const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`);
-      const geoData = await geoRes.json();
-      setCity(geoData.address?.city || geoData.address?.town || "Город");
-      const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
-      const weatherData = await weatherRes.json();
-      setWeather({ temp: Math.round(weatherData.current_weather.temperature), code: weatherData.current_weather.weathercode });
-    } catch (e) {}
+  // --- Хэндлеры UI ---
+  const handleStopStart = () => {
+    // Начинаем заполнять прогресс-бар кнопки (1.5 секунды)
+    if (navigator.vibrate) navigator.vibrate(50);
+    let progress = 0;
+    stopIntervalRef.current = setInterval(() => {
+      progress += 5; // 20 итераций по 5% = 100%
+      setStopProgress(progress);
+      if (progress >= 100) {
+        clearInterval(stopIntervalRef.current!);
+        handleFinalStop();
+      }
+    }, 75); // 75ms * 20 = 1500ms
   };
 
-  const handleStart = () => {
-    setRunState("running");
-    startTimeRef.current = Date.now();
-    if (elapsedTimeMs === 0) {
-      setPath(location ? [[location.lon, location.lat]] : []);
-      setDistanceMeters(0);
-    }
+  const handleStopCancel = () => {
+    // Если отпустили палец раньше - сбрасываем
+    if (stopIntervalRef.current) clearInterval(stopIntervalRef.current);
+    setStopProgress(0);
   };
 
-  const handlePause = () => {
-    setRunState("paused");
-    accumulatedTimeRef.current += (Date.now() - startTimeRef.current);
-  };
-
-  const handleStop = async () => {
-    setRunState("idle");
-    const totalDurationSec = Math.floor(elapsedTimeMs / 1000);
+  const handleFinalStop = async () => {
+    setStopProgress(0);
+    const result = stopRun(); // Вызываем стоп в ядре
     
-    if (distanceMeters > 20 && userId) {
-      // Подсчет параметров для базы
-      const calories = Math.round((distanceMeters / 1000) * 70); // Примерно 70ккал на км
-      const steps = Math.round((distanceMeters / 1000) * 1300); // Примерно 1300 шагов на км
-      const avg_speed_kmh = (distanceMeters / 1000) / (totalDurationSec / 3600);
-
-      const newRun = {
+    if (result.distanceMeters > 20 && userId) {
+      const avg_speed_kmh = (result.distanceMeters / 1000) / (result.durationSec / 3600);
+      const calories = Math.round((result.distanceMeters / 1000) * 70); // Оценка ккал
+      
+      await supabase.from('cloud_runs').insert({
         id: crypto.randomUUID(),
         user_id: userId,
         timestamp: Date.now(),
-        duration_seconds: totalDurationSec,
-        distance_meters: Math.round(distanceMeters),
+        duration_seconds: result.durationSec,
+        distance_meters: Math.round(result.distanceMeters),
         calories: calories,
-        steps: steps,
+        steps: result.steps,
         avg_speed_kmh: avg_speed_kmh,
         title: "Бег на улице",
-        path_points_json: JSON.stringify(path),
-        source: "WEIRUN" // Записываем правильный source!
-      };
-      
-      await supabase.from('cloud_runs').insert(newRun);
-      setLastRun(newRun);
-      alert("Тренировка сохранена!");
+        path_points_json: JSON.stringify(result.path),
+        source: "WEIFOX" // <-- Правильный источник, как ты просил!
+      });
+      alert("Тренировка WEIFOX сохранена!");
     } else {
-      alert("Дистанция слишком мала для сохранения (минимум 20 м).");
+      alert("Дистанция слишком мала для сохранения.");
     }
-    
-    // Сброс
-    setPath([]);
-    setDistanceMeters(0);
-    setElapsedTimeMs(0);
-    accumulatedTimeRef.current = 0;
   };
 
-  const geojsonLine = { type: "Feature" as const, properties: {}, geometry: { type: "LineString" as const, coordinates: path } };
-
-  // Вычисляемые параметры для экрана бега
+  // --- ВЫЧИСЛЕНИЯ ДЛЯ UI ---
   const durationSec = Math.floor(elapsedTimeMs / 1000);
-  const currentPace = calculatePace(durationSec, distanceMeters);
-  const liveCalories = Math.round((distanceMeters / 1000) * 70);
-  const liveSteps = Math.round((distanceMeters / 1000) * 1300);
+  const avgPace = calculatePace(durationSec, distance); // Средний темп
+  const currentPaceStr = calculatePace(currentPaceSec, 1000); // Текущий темп (за последние 10 сек)
+  const liveCalories = Math.round((distance / 1000) * 70);
+  
+  // Текущая локация для центрирования карты
+  const currentLoc = path.length > 0 ? { lon: path[path.length-1][0], lat: path[path.length-1][1] } : location;
+  const geojsonLine = { type: "Feature" as const, properties: {}, geometry: { type: "LineString" as const, coordinates: path } };
 
   return (
     <div className="h-[100dvh] w-full relative overflow-hidden bg-background">
       
       {/* КАРТА */}
       <div className="absolute inset-0 z-0">
-        {location ? (
+        {currentLoc ? (
           <Map
             mapLib={maplibreGl as any}
-            initialViewState={{ longitude: location.lon, latitude: location.lat, zoom: 16 }}
+            longitude={currentLoc.lon} latitude={currentLoc.lat} zoom={16}
             style={{ width: "100%", height: "100%" }}
             mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
           >
-            <Marker longitude={location.lon} latitude={location.lat} anchor="center">
+            <Marker longitude={currentLoc.lon} latitude={currentLoc.lat} anchor="center">
               <div className="w-6 h-6 bg-blue-500 rounded-full border-4 border-white shadow-[0_0_20px_rgba(59,130,246,0.8)]" />
             </Marker>
             {path.length > 1 && (
@@ -181,120 +113,108 @@ function Home() {
         ) : (
           <div className="w-full h-full bg-[#0A0D12]" />
         )}
-        <div className="absolute inset-0 bg-background/70 pointer-events-none" />
+        <div className="absolute inset-0 bg-background/80 pointer-events-none" />
       </div>
 
-      <div className="absolute inset-0 z-10 flex flex-col justify-between pt-[60px] pb-[90px]">
+      <div className="absolute inset-0 z-10 flex flex-col justify-between pt-[60px] pb-[90px] px-4">
         
-        {/* ИНТЕРФЕЙС "В ОЖИДАНИИ" */}
-        {runState === "idle" && (
-          <>
-            <div className="flex justify-between items-start px-4">
-              <div>
-                <p className="text-white drop-shadow-md text-sm mb-1">Доброй ночи, Атлет 👋</p>
-                <h1 className="font-display text-3xl font-bold uppercase drop-shadow-lg text-white">ГОТОВ К СТАРТУ?</h1>
-                <div className="flex items-center gap-2 mt-4 bg-black/60 border border-white/10 px-3 py-1.5 rounded-full w-max">
-                  <div className={`w-2 h-2 rounded-full ${gpsStatus === 'Готов' ? 'bg-primary' : 'bg-red-500'} animate-pulse`} />
-                  <span className="text-xs font-display tracking-widest text-white/80 uppercase">GPS: {gpsStatus}</span>
-                </div>
-              </div>
-              <div className="bg-black/60 border border-white/10 p-3 rounded-2xl flex flex-col items-center">
-                {weather?.code === 0 ? <Sun className="text-yellow-400 mb-1" size={24} /> : <CloudLightning className="text-primary mb-1" size={24} />}
-                <span className="font-bold text-white">{weather ? `${weather.temp}°C` : '--°C'}</span>
-                <span className="text-[10px] text-white/60 uppercase text-center max-w-[80px] truncate">{city}</span>
-              </div>
+        {/* ИНДИКАТОР СТАТУСА (В левом верхнем углу) */}
+        <div className="flex justify-between items-start">
+          {runState !== "idle" && (
+            <div className="border border-primary text-primary px-4 py-1.5 rounded-full flex items-center gap-2 text-xs font-bold font-display tracking-widest uppercase bg-black/60 backdrop-blur-md">
+              <div className={`w-2 h-2 rounded-full ${runState === 'running' ? 'bg-primary animate-pulse' : 'bg-yellow-500'}`} />
+              {runState === "running" ? "Запись" : "Пауза"}
             </div>
+          )}
+        </div>
 
-            <div className="flex flex-col items-center w-full max-w-[500px] mx-auto px-4">
-              <div className="flex justify-between w-full mb-8">
-                <div className="bg-black/60 border border-white/10 p-4 rounded-2xl w-[48%] shadow-xl">
-                  <p className="text-[10px] text-white/60 uppercase font-display tracking-widest mb-1">Последняя дистанция</p>
-                  <p className="font-display text-2xl font-bold text-white">{lastRun ? (lastRun.distance_meters/1000).toFixed(2) : "0.0"} <span className="text-sm">км</span></p>
-                </div>
-                <div className="bg-black/60 border border-white/10 p-4 rounded-2xl w-[48%] shadow-xl">
-                  <p className="text-[10px] text-white/60 uppercase font-display tracking-widest mb-1">Время</p>
-                  <p className="font-display text-2xl font-bold text-white">{lastRun ? formatDuration(lastRun.duration_seconds) : "00:00"}</p>
-                </div>
-              </div>
-
-              <button onClick={handleStart} className="w-32 h-32 md:w-40 md:h-40 rounded-full flex flex-col items-center justify-center bg-primary border-[6px] border-primary/30 shadow-[0_0_60px_rgba(200,248,8,0.4)] active:scale-95 transition-transform relative mb-6">
-                <div className="absolute inset-0 rounded-full border border-primary/50 animate-ping" />
-                <Play className="text-black fill-black ml-2 mb-1" size={36} />
-                <span className="font-display text-xl font-bold uppercase tracking-widest text-black">СТАРТ</span>
-              </button>
-            </div>
-          </>
-        )}
-
-        {/* БОЕВОЙ ИНТЕРФЕЙС ВО ВРЕМЯ БЕГА (КАК НА СКРИНШОТЕ 6) */}
-        {runState !== "idle" && (
-          <div className="flex flex-col h-full justify-between px-4">
+        {/* ГЛАВНЫЙ БОЕВОЙ ИНТЕРФЕЙС */}
+        {runState !== "idle" ? (
+          <div className="flex flex-col h-full justify-end pb-4">
             
-            <div className="flex justify-between items-center mt-2">
-              <div className="border border-primary text-primary px-4 py-1.5 rounded-full flex items-center gap-2 text-xs font-bold font-display tracking-widest uppercase bg-black/50 backdrop-blur-md">
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                {runState === "running" ? "Запись" : "Пауза"}
-              </div>
-            </div>
-
-            <div className="text-center mt-6">
-              <h1 className="font-display text-[100px] leading-none font-bold tracking-tight">
-                {(distanceMeters / 1000).toFixed(2).replace('.', ',')}
+            {/* ГИГАНТСКАЯ ДИСТАНЦИЯ */}
+            <div className="text-center mb-8">
+              <h1 className="font-display text-[100px] md:text-[120px] leading-none font-bold tracking-tight text-white drop-shadow-xl">
+                {(distance / 1000).toFixed(2).replace('.', ',')}
               </h1>
-              <p className="text-primary font-display tracking-[0.3em] uppercase mt-2">Километров</p>
+              <p className="text-primary font-display tracking-[0.3em] uppercase mt-1 text-sm font-bold">Километров</p>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 mt-10">
-              <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-md">
-                <Activity className="text-primary mb-1" size={20} />
-                <p className="font-bold text-lg leading-tight">{currentPace}</p>
-                <p className="text-[9px] text-muted uppercase font-display tracking-widest">Темп</p>
+            {/* СЕТКА ПАРАМЕТРОВ (Точь-в-точь как на скриншоте 6) */}
+            <div className="grid grid-cols-3 gap-3 mb-8">
+              <div className="bg-card/80 border border-white/5 p-4 rounded-3xl flex flex-col items-center justify-center backdrop-blur-xl">
+                <Navigation className="text-primary mb-2" size={20} strokeWidth={2.5}/>
+                <p className="font-bold text-xl leading-tight font-display">{currentPaceStr}</p>
+                <p className="text-[9px] text-muted uppercase font-display tracking-widest mt-1">Темп</p>
               </div>
-              <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-md">
-                <Clock className="text-primary mb-1" size={20} />
-                <p className="font-bold text-lg leading-tight font-display">{formatStopwatch(elapsedTimeMs)}</p>
-                <p className="text-[9px] text-muted uppercase font-display tracking-widest">Время</p>
+              <div className="bg-card/80 border border-white/5 p-4 rounded-3xl flex flex-col items-center justify-center backdrop-blur-xl">
+                <Clock className="text-primary mb-2" size={20} strokeWidth={2.5}/>
+                <p className="font-bold text-xl leading-tight font-display">{formatStopwatch(elapsedTimeMs)}</p>
+                <p className="text-[9px] text-muted uppercase font-display tracking-widest mt-1">Время</p>
               </div>
-              <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-md">
-                <Navigation className="text-primary mb-1" size={20} />
-                <p className="font-bold text-lg leading-tight">{liveSteps}</p>
-                <p className="text-[9px] text-muted uppercase font-display tracking-widest">Шаги</p>
+              <div className="bg-card/80 border border-white/5 p-4 rounded-3xl flex flex-col items-center justify-center backdrop-blur-xl">
+                <Footprints className="text-primary mb-2" size={20} strokeWidth={2.5}/>
+                <p className="font-bold text-xl leading-tight font-display">{steps}</p>
+                <p className="text-[9px] text-muted uppercase font-display tracking-widest mt-1">Шаги</p>
               </div>
-              <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-md">
-                <Activity className="text-primary mb-1" size={20} />
-                <p className="font-bold text-lg leading-tight">{currentPace}</p>
-                <p className="text-[9px] text-muted uppercase font-display tracking-widest">Ср. темп</p>
+              <div className="bg-card/80 border border-white/5 p-4 rounded-3xl flex flex-col items-center justify-center backdrop-blur-xl">
+                <Activity className="text-primary mb-2" size={20} strokeWidth={2.5}/>
+                <p className="font-bold text-xl leading-tight font-display">{avgPace}</p>
+                <p className="text-[9px] text-muted uppercase font-display tracking-widest mt-1">Ср. темп</p>
               </div>
-              <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-md">
-                <Flame className="text-primary mb-1" size={20} />
-                <p className="font-bold text-lg leading-tight">{liveCalories}</p>
-                <p className="text-[9px] text-muted uppercase font-display tracking-widest">Ккал</p>
+              <div className="bg-card/80 border border-white/5 p-4 rounded-3xl flex flex-col items-center justify-center backdrop-blur-xl">
+                <Flame className="text-primary mb-2" size={20} strokeWidth={2.5}/>
+                <p className="font-bold text-xl leading-tight font-display">{liveCalories}</p>
+                <p className="text-[9px] text-muted uppercase font-display tracking-widest mt-1">Ккал</p>
               </div>
-              <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-md opacity-50">
-                <Heart className="text-muted mb-1" size={20} />
-                <p className="font-bold text-sm leading-tight">--</p>
-                <p className="text-[8px] text-muted uppercase font-display tracking-widest text-center leading-tight">Без датчика</p>
+              <div className="bg-card/80 border border-white/5 p-4 rounded-3xl flex flex-col items-center justify-center backdrop-blur-xl opacity-60">
+                <Heart className="text-muted mb-2" size={20} strokeWidth={2.5}/>
+                <p className="font-bold text-lg leading-tight font-display">--</p>
+                <p className="text-[8px] text-muted uppercase font-display tracking-widest mt-1 leading-tight text-center">Без датчика</p>
               </div>
             </div>
 
-            <div className="flex gap-4 mt-10">
+            {/* КНОПКИ УПРАВЛЕНИЯ */}
+            <div className="flex gap-4">
               <button 
-                onClick={runState === "running" ? handlePause : handleStart} 
-                className="w-20 h-20 rounded-full bg-[#1C2026] flex items-center justify-center active:scale-95 transition-transform"
+                onClick={runState === "running" ? pauseRun : startRun} 
+                className="w-[80px] h-[80px] rounded-full bg-[#1C2026] flex items-center justify-center active:scale-95 transition-transform"
               >
-                {runState === "running" ? <Pause className="text-white fill-white" size={28} /> : <Play className="text-white fill-white" size={28} />}
+                {runState === "running" ? <Pause className="text-white fill-white" size={32} /> : <Play className="text-white fill-white ml-2" size={36} />}
               </button>
+              
+              {/* Кнопка "Удерживать для стопа" */}
               <button 
-                onClick={handleStop}
-                className="flex-1 rounded-full bg-[#FF3B4E] flex items-center justify-center gap-3 active:scale-95 transition-transform shadow-[0_0_30px_rgba(255,59,78,0.4)]"
+                onPointerDown={handleStopStart}
+                onPointerUp={handleStopCancel}
+                onPointerLeave={handleStopCancel}
+                className="flex-1 rounded-full bg-[#FF3B4E] flex items-center justify-center gap-3 relative overflow-hidden active:scale-[0.98] transition-transform shadow-[0_0_30px_rgba(255,59,78,0.3)] select-none touch-none"
               >
-                <Square className="text-white fill-white" size={20} />
-                <span className="font-display text-lg font-bold uppercase tracking-widest text-white">Завершить</span>
+                {/* Индикатор прогресса нажатия */}
+                <div 
+                  className="absolute left-0 top-0 bottom-0 bg-red-700 transition-all duration-75 ease-linear" 
+                  style={{ width: `${stopProgress}%` }}
+                />
+                <div className="relative z-10 flex items-center gap-3">
+                  <Square className="text-white fill-white" size={20} />
+                  <span className="font-display text-xl font-bold uppercase tracking-widest text-white">
+                    {stopProgress > 0 ? "Удерживайте..." : "Завершить"}
+                  </span>
+                </div>
               </button>
             </div>
           </div>
+        ) : (
+          /* ИНТЕРФЕЙС ДО СТАРТА */
+          <div className="flex flex-col items-center w-full h-full justify-center">
+            <button onClick={startRun} className="w-48 h-48 rounded-full flex flex-col items-center justify-center bg-primary border-[8px] border-primary/20 shadow-[0_0_80px_rgba(200,248,8,0.4)] active:scale-95 transition-transform relative mb-6 cursor-pointer">
+              <div className="absolute inset-0 rounded-full border border-primary/50 animate-ping" />
+              <Play className="text-black fill-black ml-3 mb-2" size={48} />
+              <span className="font-display text-2xl font-bold uppercase tracking-widest text-black">СТАРТ</span>
+            </button>
+            <p className="text-muted text-sm uppercase tracking-widest font-display">Нажмите для начала записи</p>
+          </div>
         )}
-
       </div>
     </div>
   );
