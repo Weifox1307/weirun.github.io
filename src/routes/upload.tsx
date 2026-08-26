@@ -33,16 +33,14 @@ function Upload() {
     
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      // 1. Сохраняем забег
-      await supabase.from('runs').insert({
+      await supabase.from('cloud_runs').insert({
         user_id: user.id,
-        distance_km: fileData.distanceKm,
-        duration_ms: fileData.durationMs,
-        source: 'gpx_upload'
+        distance_meters: Math.round(fileData.distanceKm * 1000),
+        duration_seconds: Math.round(fileData.durationMs / 1000),
+        timestamp: Date.now(),
+        title: "Импорт из GPX",
+        source: 'WEIRUN' // <-- И здесь теперь тоже WEIRUN
       });
-      // 2. Обновляем статистику профиля (Supabase RPC или простой Update)
-      // В реальном проекте лучше использовать базу данных (Trigger или RPC)
-      
       alert("Тренировка успешно загружена!");
       setFileData(null);
     }
@@ -62,7 +60,7 @@ function Upload() {
       </label>
 
       {fileData && (
-        <div className="glass rounded-2xl p-6 text-center animate-in fade-in zoom-in duration-300">
+        <div className="glass-card p-6 text-center animate-in fade-in zoom-in duration-300">
           <h3 className="text-xl font-bold mb-2">Найдена тренировка</h3>
           <p className="font-display text-4xl text-primary font-bold mb-6">{fileData.distanceKm.toFixed(2)} <span className="text-xl">км</span></p>
           <button 
