@@ -5,21 +5,33 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Формат для архива (без долей секунд)
 export function formatDuration(sec: number | null | undefined): string {
   if (!sec) return "00:00";
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec % 3600) / 60);
   const s = Math.floor(sec % 60);
   if (h > 0) return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  return `${m}:${s.toString().padStart(2, "0")}`;
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
+
+// Формат для экрана бега (с десятыми: 00:11.5)
+export function formatStopwatch(ms: number): string {
+  if (!ms) return "00:00.0";
+  const totalSec = Math.floor(ms / 1000);
+  const tenths = Math.floor((ms % 1000) / 100);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}.${tenths}`;
 }
 
 export function calculatePace(durationSec: number | null | undefined, distanceMeters: number | null | undefined): string {
-  if (!distanceMeters || !durationSec) return "0:00";
+  if (!distanceMeters || !durationSec || distanceMeters === 0) return "--:--";
   const km = distanceMeters / 1000;
   const secPerKm = durationSec / km;
   const m = Math.floor(secPerKm / 60);
   const s = Math.floor(secPerKm % 60);
+  if (m > 99) return ">99:59"; // Если стоим на месте
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
