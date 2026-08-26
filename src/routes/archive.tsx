@@ -1,25 +1,24 @@
-import { createFileRoute, useOutletContext } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Search, Activity, Plus } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { formatDuration, calculatePace, formatDate } from "@/lib/utils";
-import type { Session } from "@supabase/supabase-js";
 
 export const Route = createFileRoute("/archive")({ component: Archive });
 
 function Archive() {
-  const { session } = useOutletContext<{ session: Session | null }>();
   const [runs, setRuns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Статистика за всё время
   const [stats, setStats] = useState({ distance: 0, duration: 0, calories: 0, count: 0 });
 
   useEffect(() => {
-    if (!session?.user?.id) return;
-    
     async function loadRuns() {
-      // Подтягиваем тренировки с сортировкой по времени (свежие сверху)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) {
+        setLoading(false);
+        return;
+      }
+      
       const { data } = await supabase
         .from('cloud_runs')
         .select('*')
@@ -28,8 +27,6 @@ function Archive() {
 
       if (data) {
         setRuns(data);
-        
-        // Считаем общую статику
         const totalDist = data.reduce((acc, r) => acc + (r.distance_meters || 0), 0);
         const totalDur = data.reduce((acc, r) => acc + (r.duration_seconds || 0), 0);
         const totalCal = data.reduce((acc, r) => acc + (r.calories || 0), 0);
@@ -38,7 +35,7 @@ function Archive() {
       setLoading(false);
     }
     loadRuns();
-  }, [session]);
+  }, []);
 
   const totalKm = (stats.distance / 1000).toFixed(2);
   const avgDist = stats.count > 0 ? ((stats.distance / 1000) / stats.count).toFixed(1) : "0.0";
@@ -48,7 +45,6 @@ function Archive() {
       <h1 className="font-display text-4xl font-bold uppercase mb-1">Архив треков</h1>
       <p className="text-primary text-xs font-display tracking-widest uppercase mb-8">Твоя лента побед и рекордов</p>
 
-      {/* Карточка суммарной статистики */}
       <div className="glass-card p-6 mb-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
         
@@ -131,7 +127,6 @@ function Archive() {
         </div>
       )}
 
-      {/* Плавающая кнопка для добавления трека вручную / загрузки GPX */}
       <button className="fixed md:absolute bottom-[100px] md:bottom-10 right-4 md:right-0 w-16 h-16 bg-primary rounded-full shadow-[0_0_20px_rgba(200,248,8,0.3)] flex items-center justify-center text-black active:scale-95 transition-transform z-40">
         <Plus size={32} />
       </button>
