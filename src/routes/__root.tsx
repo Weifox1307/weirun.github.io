@@ -3,14 +3,14 @@ import { useEffect, useState } from "react";
 import { Menu, User, Activity, MapPin, Trophy, History, X, Medal, Settings, Rss, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
-import "../styles.css"; // Прямой импорт стилей (без ?url)
+import "../styles.css";
 
 export const Route = createRootRoute({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" },
-      { title: "WEIRUN" },
+      { title: "WEIRUN" }, // <-- ИСПРАВЛЕН ЗАГОЛОВОК
       { name: "theme-color", content: "#090A0D" },
     ],
     links: [
@@ -27,6 +27,9 @@ function RootComponent() {
   const showNav = session && router.state.location.pathname !== '/' && router.state.location.pathname !== '/login';
 
   useEffect(() => {
+    // Принудительно меняем Title в документе
+    document.title = "WEIRUN";
+    
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => setSession(session));
     return () => subscription.unsubscribe();
@@ -44,7 +47,7 @@ function RootComponent() {
   const SideMenuLinks = () => (
     <div className="flex flex-col gap-4 mt-8">
       <Link to="/awards" onClick={() => setMenuOpen(false)} className="flex items-center gap-4 text-lg font-bold text-white hover:text-primary"><Medal size={24}/> Зал Славы</Link>
-      <div className="flex items-center gap-4 text-lg font-bold text-white hover:text-primary cursor-pointer"><Activity size={24}/> Рекорды (Скоро)</div>
+      <Link to="/records" onClick={() => setMenuOpen(false)} className="flex items-center gap-4 text-lg font-bold text-white hover:text-primary"><Activity size={24}/> Рекорды (Скоро)</Link>
       <div className="flex items-center gap-4 text-lg font-bold text-white hover:text-primary cursor-pointer"><Rss size={24}/> Лента (Скоро)</div>
       <div className="flex items-center gap-4 text-lg font-bold text-white hover:text-primary cursor-pointer"><Users size={24}/> Тренер (Скоро)</div>
       <div className="flex items-center gap-4 text-lg font-bold text-white hover:text-primary cursor-pointer"><Settings size={24}/> Настройки (Скоро)</div>
