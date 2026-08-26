@@ -14,7 +14,6 @@ function Archive() {
 
   useEffect(() => {
     async function loadRuns() {
-      // Прямой запрос сессии
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) { setLoading(false); return; }
       
@@ -39,41 +38,67 @@ function Archive() {
       <h1 className="font-display text-4xl font-bold uppercase mb-1">Архив треков</h1>
       <p className="text-primary text-xs font-display tracking-widest uppercase mb-8">Твоя лента побед и рекордов</p>
 
+      {/* Модалка деталей трека */}
       {selectedRun && (
         <div className="fixed inset-0 z-50 bg-background overflow-y-auto p-4 pt-10">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="font-display text-2xl font-bold uppercase">{selectedRun.title || "Бег на улице"}</h2>
+            <div>
+              <h2 className="font-display text-2xl font-bold uppercase">{selectedRun.title || "Бег на улице"}</h2>
+              <p className="text-muted text-xs font-display tracking-widest">{formatDate(selectedRun.timestamp)}</p>
+            </div>
             <button onClick={() => setSelectedRun(null)} className="p-2 bg-card rounded-full"><X size={20}/></button>
           </div>
           
           <div className="glass-card p-6 mb-6 bg-[#0A0D12]">
-             <div className="flex items-center justify-center h-40 border-2 border-dashed border-border rounded-xl text-muted mb-6">
-                <Navigation size={32} className="mr-2 opacity-50"/> 
-                {selectedRun.path_points_json ? "Карта маршрута" : "GPS трек отсутствует"}
+             {/* Заглушка для карты маршрута */}
+             <div className="flex items-center justify-center h-40 border-2 border-dashed border-border rounded-xl text-muted mb-6 bg-card/30">
+                <Navigation size={32} className="mr-2 opacity-50 text-primary"/> 
+                <span className="font-display tracking-widest uppercase text-xs">
+                  {selectedRun.path_points_json && selectedRun.path_points_json !== "[]" ? "Маршрут сохранен" : "GPS трек отсутствует"}
+                </span>
              </div>
              
-             <div className="grid grid-cols-2 gap-6 text-center">
+             {/* Сетка параметров */}
+             <div className="grid grid-cols-2 gap-6 text-center border-b border-border pb-6 mb-6">
                 <div>
-                  <p className="text-xs text-muted uppercase font-display tracking-widest">Дистанция</p>
-                  <p className="font-display text-4xl font-bold text-primary">{(selectedRun.distance_meters/1000).toFixed(2)} <span className="text-sm text-white">км</span></p>
+                  <p className="text-[10px] text-muted uppercase font-display tracking-widest mb-1">Дистанция</p>
+                  <p className="font-display text-5xl font-bold text-primary">{(selectedRun.distance_meters/1000).toFixed(2)} <span className="text-sm text-white">км</span></p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted uppercase font-display tracking-widest">Время</p>
-                  <p className="font-display text-4xl font-bold">{formatDuration(selectedRun.duration_seconds)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted uppercase font-display tracking-widest">Темп</p>
-                  <p className="font-display text-2xl font-bold">{calculatePace(selectedRun.duration_seconds, selectedRun.distance_meters)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted uppercase font-display tracking-widest">Калории</p>
-                  <p className="font-display text-2xl font-bold">{selectedRun.calories || 0} ккал</p>
+                  <p className="text-[10px] text-muted uppercase font-display tracking-widest mb-1">Время</p>
+                  <p className="font-display text-4xl font-bold mt-1">{formatDuration(selectedRun.duration_seconds)}</p>
                 </div>
              </div>
+
+             <div className="grid grid-cols-4 gap-2 text-center">
+                <div>
+                  <p className="text-[9px] text-muted uppercase font-display tracking-widest mb-1">Темп</p>
+                  <p className="font-bold text-sm">{calculatePace(selectedRun.duration_seconds, selectedRun.distance_meters)}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] text-muted uppercase font-display tracking-widest mb-1">Скорость</p>
+                  <p className="font-bold text-sm">{selectedRun.avg_speed_kmh?.toFixed(1) || 0} км/ч</p>
+                </div>
+                <div>
+                  <p className="text-[9px] text-muted uppercase font-display tracking-widest mb-1">Калории</p>
+                  <p className="font-bold text-sm">{selectedRun.calories || 0}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] text-muted uppercase font-display tracking-widest mb-1">Шаги</p>
+                  <p className="font-bold text-sm">{selectedRun.steps || 0}</p>
+                </div>
+             </div>
+          </div>
+          
+          <div className="text-center mt-8">
+            <span className="text-[10px] text-muted uppercase tracking-widest border border-border px-3 py-1 rounded-full">
+              Источник: {selectedRun.source || "Неизвестно"}
+            </span>
           </div>
         </div>
       )}
 
+      {/* Дальше весь остальной код архива (Сводка и Список), он не меняется */}
       <div className="glass-card p-6 mb-8">
         <div className="flex justify-between items-start mb-6">
           <div><p className="text-xs text-muted uppercase mb-1">Общий километраж</p><p className="font-display text-5xl font-bold">{totalKm}</p></div>
