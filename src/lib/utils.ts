@@ -1,12 +1,10 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-// Для объединения Tailwind классов
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Формат времени: из секунд в ММ:СС или ЧЧ:ММ:СС
 export function formatDuration(sec: number) {
   if (!sec) return "00:00";
   const h = Math.floor(sec / 3600);
@@ -16,7 +14,6 @@ export function formatDuration(sec: number) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-// Расчет темпа: секунды на километр -> ММ:СС /км
 export function calculatePace(durationSec: number, distanceMeters: number) {
   if (!distanceMeters || !durationSec) return "0:00";
   const km = distanceMeters / 1000;
@@ -26,22 +23,27 @@ export function calculatePace(durationSec: number, distanceMeters: number) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-// Конвертация даты из timestamp (мс)
 export function formatDate(timestamp: number) {
   if (!timestamp) return "";
   return new Date(timestamp).toLocaleDateString("ru-RU", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+    day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
   });
 }
 
-// Расчет возраста из timestamp рождения
 export function calculateAge(birthDateTimestamp: number) {
   if (!birthDateTimestamp) return "--";
-  const ageDifMs = Date.now() - birthDateTimestamp;
-  const ageDate = new Date(ageDifMs);
+  const ageDate = new Date(Date.now() - birthDateTimestamp);
   return Math.abs(ageDate.getUTCFullYear() - 1970);
+}
+
+// Вычисление дистанции между двумя GPS координатами (в метрах)
+export function getDistanceMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371e3; // Радиус Земли в метрах
+  const p1 = lat1 * Math.PI/180;
+  const p2 = lat2 * Math.PI/180;
+  const dp = (lat2-lat1) * Math.PI/180;
+  const dl = (lon2-lon1) * Math.PI/180;
+  const a = Math.sin(dp/2) * Math.sin(dp/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2) * Math.sin(dl/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
 }
