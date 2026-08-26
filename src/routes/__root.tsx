@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import { Menu, User, Activity, MapPin, Trophy, History, X, Medal, Settings, Rss, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
-import appCss from "../styles.css?url";
+import "../styles.css"; // Прямой импорт стилей (без ?url)
 
 export const Route = createRootRoute({
-  head: () => ({ /* ... Твои старые метатеги и линки (оставь как было в предыдущем шаге) ... */
+  head: () => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" },
@@ -14,8 +14,7 @@ export const Route = createRootRoute({
       { name: "theme-color", content: "#090A0D" },
     ],
     links: [
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" },
-      { rel: "stylesheet", href: appCss },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" }
     ]
   }),
   component: RootComponent,
@@ -45,11 +44,10 @@ function RootComponent() {
   const SideMenuLinks = () => (
     <div className="flex flex-col gap-4 mt-8">
       <Link to="/awards" onClick={() => setMenuOpen(false)} className="flex items-center gap-4 text-lg font-bold text-white hover:text-primary"><Medal size={24}/> Зал Славы</Link>
-      {/* Здесь потом добавим роуты /records, /news, /coach, /settings */}
-      <Link to="/" className="flex items-center gap-4 text-lg font-bold text-white hover:text-primary"><Activity size={24}/> Рекорды (Скоро)</Link>
-      <Link to="/" className="flex items-center gap-4 text-lg font-bold text-white hover:text-primary"><Rss size={24}/> Лента (Скоро)</Link>
-      <Link to="/" className="flex items-center gap-4 text-lg font-bold text-white hover:text-primary"><Users size={24}/> Тренер (Скоро)</Link>
-      <Link to="/" className="flex items-center gap-4 text-lg font-bold text-white hover:text-primary"><Settings size={24}/> Настройки (Скоро)</Link>
+      <div className="flex items-center gap-4 text-lg font-bold text-white hover:text-primary cursor-pointer"><Activity size={24}/> Рекорды (Скоро)</div>
+      <div className="flex items-center gap-4 text-lg font-bold text-white hover:text-primary cursor-pointer"><Rss size={24}/> Лента (Скоро)</div>
+      <div className="flex items-center gap-4 text-lg font-bold text-white hover:text-primary cursor-pointer"><Users size={24}/> Тренер (Скоро)</div>
+      <div className="flex items-center gap-4 text-lg font-bold text-white hover:text-primary cursor-pointer"><Settings size={24}/> Настройки (Скоро)</div>
     </div>
   );
 
@@ -57,8 +55,6 @@ function RootComponent() {
     <html lang="ru" className="antialiased bg-background text-foreground">
       <head><HeadContent /></head>
       <body className="min-h-screen flex">
-        
-        {/* Боковое меню на ПК */}
         {showNav && (
           <aside className="hidden md:flex flex-col w-64 h-screen fixed top-0 left-0 bg-card border-r border-border p-6 z-50">
             <div className="flex items-center gap-3 mb-12"><img src="/logo-mark.png" className="w-10 h-10" alt=""/><span className="font-display text-2xl font-bold tracking-[0.2em] uppercase">Weirun</span></div>
@@ -67,7 +63,6 @@ function RootComponent() {
           </aside>
         )}
 
-        {/* Шторка меню для Мобилок */}
         {showNav && menuOpen && (
           <div className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-xl p-6 md:hidden">
             <div className="flex justify-between items-center mb-8">
