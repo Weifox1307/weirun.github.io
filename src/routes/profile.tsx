@@ -1,14 +1,12 @@
-import { createFileRoute, useOutletContext, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Camera, Zap, LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { calculateAge, calculatePace } from "@/lib/utils";
-import type { Session } from "@supabase/supabase-js";
 
 export const Route = createFileRoute("/profile")({ component: Profile });
 
 function Profile() {
-  const { session } = useOutletContext<{ session: Session | null }>();
   const router = useRouter();
   
   const [profile, setProfile] = useState<any>(null);
@@ -16,9 +14,14 @@ function Profile() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!session?.user?.id) return;
-    
     async function loadData() {
+      // Получаем сессию напрямую у Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) {
+        setLoading(false);
+        return;
+      }
+      
       // 1. Грузим профиль
       const { data: prof } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
       setProfile(prof);
@@ -37,7 +40,7 @@ function Profile() {
     }
     
     loadData();
-  }, [session]);
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -56,7 +59,6 @@ function Profile() {
         </button>
       </div>
 
-      {/* Аватар и Имя */}
       <div className="flex flex-col items-center mb-10 relative">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-10" />
         
@@ -83,7 +85,6 @@ function Profile() {
         </div>
       </div>
 
-      {/* Главная статистика */}
       <div className="glass-card p-6 grid grid-cols-3 divide-x divide-border mb-8 text-center">
         <div>
           <p className="font-display text-3xl font-bold">{totalKm} <span className="text-sm text-muted">км</span></p>
@@ -99,7 +100,6 @@ function Profile() {
         </div>
       </div>
 
-      {/* Физические показатели */}
       <h3 className="text-xs font-display tracking-widest text-muted uppercase mb-3">Физические показатели</h3>
       <div className="glass-card p-6 flex justify-between">
         <div>
