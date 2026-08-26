@@ -1,19 +1,17 @@
-import { createFileRoute, useOutletContext } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Trophy, RotateCw } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import type { Session } from "@supabase/supabase-js";
 
 export const Route = createFileRoute("/leaderboard")({ component: Leaderboard });
 
 function Leaderboard() {
-  const { session } = useOutletContext<{ session: Session | null }>();
   const [leaders, setLeaders] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const fetchLeaders = async () => {
     setRefreshing(true);
-    // Берем топ 50 атлетов, сортируем по total_distance_meters по убыванию
     const { data } = await supabase
       .from('profiles')
       .select('id, name, avatar_url, total_distance_meters')
@@ -21,16 +19,19 @@ function Leaderboard() {
       .limit(50);
       
     if (data) setLeaders(data);
-    setTimeout(() => setRefreshing(false), 500); // Имитация анимации
+    setTimeout(() => setRefreshing(false), 500); 
   };
 
   useEffect(() => {
+    // Узнаем ID текущего пользователя
+    supabase.auth.getSession().then(({ data }) => {
+      setCurrentUserId(data.session?.user?.id || null);
+    });
+    
     fetchLeaders();
 
-    // Включаем Realtime подписку на изменения таблицы profiles
     const channel = supabase.channel('leaderboard_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
-        // Если кто-то пробежал и его дистанция обновилась - перекачиваем топ
         fetchLeaders();
       })
       .subscribe();
@@ -57,7 +58,7 @@ function Leaderboard() {
         {leaders.length === 0 && <p className="text-center text-muted">Загрузка рейтинга...</p>}
         
         {leaders.map((user, idx) => {
-          const isMe = session?.user?.id === user.id;
+          const isMe = currentUserId === user.id;
           const km = ((user.total_distance_meters || 0) / 1000).toFixed(1);
           
           return (
