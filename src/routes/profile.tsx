@@ -1,6 +1,6 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Camera, Zap, LogOut } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Camera, Zap, LogOut, Edit2, Check, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { calculateAge, calculatePace } from "@/lib/utils";
 
@@ -8,44 +8,72 @@ export const Route = createFileRoute("/profile")({ component: Profile });
 
 function Profile() {
   const router = useRouter();
-  
   const [profile, setProfile] = useState<any>(null);
   const [avgPace, setAvgPace] = useState("0:00");
   const [loading, setLoading] = useState(true);
+  
+  // Состояния редактирования
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ weight: 0, height: 0, birth_year: 2000, name: "" });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function loadData() {
-      // Получаем сессию напрямую у Supabase
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) {
-        setLoading(false);
-        return;
-      }
+      if (!session?.user?.id) { setLoading(false); return; }
       
-      // 1. Грузим профиль
       const { data: prof } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
       setProfile(prof);
+      setEditForm({ 
+        weight: prof?.weight || 0, 
+        height: prof?.height || 0, 
+        name: prof?.name || "",
+        birth_year: prof?.birth_date ? new Date(prof.birth_date).getFullYear() : 2000 
+      });
 
-      // 2. Считаем средний темп из всех треков
-      const { data: runs } = await supabase.from('cloud_runs')
-        .select('distance_meters, duration_seconds')
-        .eq('user_id', session.user.id);
-        
+      const { data: runs } = await supabase.from('cloud_runs').select('distance_meters, duration_seconds').eq('user_id', session.user.id);
       if (runs && runs.length > 0) {
-        const totalDist = runs.reduce((acc, run) => acc + (run.distance_meters || 0), 0);
-        const totalDur = runs.reduce((acc, run) => acc + (run.duration_seconds || 0), 0);
+        const totalDist = runs.reduce((a, r) => a + (r.distance_meters || 0), 0);
+        const totalDur = runs.reduce((a, r) => a + (r.duration_seconds || 0), 0);
         setAvgPace(calculatePace(totalDur, totalDist));
       }
       setLoading(false);
     }
-    
     loadData();
   }, []);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.navigate({ to: '/login' });
+  // Загрузка аватарки
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !profile) return;
+    
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${profile.id}-${Math.random()}.${fileExt}`;
+    
+    // Загружаем в Storage
+    const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file);
+    if (uploadError) { alert("Ошибка загрузки: " + uploadError.message); return; }
+    
+    // Получаем публичную ссылку
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+    
+    // Обновляем профиль
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', profile.id);
+    setProfile({ ...profile, avatar_url: publicUrl });
   };
+
+  // Сохранение текстовых данных
+  const saveProfile = async () => {
+    if (!profile) return;
+    const birth_date = new Date(editForm.birth_year, 0, 1).getTime(); // Упрощенно: 1 января года
+    const updates = { name: editForm.name, weight: editForm.weight, height: editForm.height, birth_date };
+    
+    await supabase.from('profiles').update(updates).eq('id', profile.id);
+    setProfile({ ...profile, ...updates });
+    setIsEditing(false);
+  };
+
+  const handleLogout = async () => { await supabase.auth.signOut(); router.navigate({ to: '/login' }); };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Загрузка профиля...</div>;
 
@@ -53,10 +81,18 @@ function Profile() {
 
   return (
     <div className="pb-safe px-4 pt-6 md:pt-12">
-      <div className="flex justify-end mb-4">
-        <button onClick={handleLogout} className="text-muted flex items-center gap-2 text-sm hover:text-red-500 transition-colors">
-          <LogOut size={16} /> Выйти
-        </button>
+      <div className="flex justify-end mb-4 gap-4">
+        {isEditing ? (
+          <>
+            <button onClick={() => setIsEditing(false)} className="text-muted"><X size={20} /></button>
+            <button onClick={saveProfile} className="text-primary"><Check size={20} /></button>
+          </>
+        ) : (
+          <>
+            <button onClick={() => setIsEditing(true)} className="text-muted hover:text-white"><Edit2 size={16} /></button>
+            <button onClick={handleLogout} className="text-muted hover:text-red-500"><LogOut size={16} /></button>
+          </>
+        )}
       </div>
 
       <div className="flex flex-col items-center mb-10 relative">
@@ -72,47 +108,43 @@ function Profile() {
               </div>
             )}
           </div>
-          <button className="absolute bottom-0 right-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center border-4 border-background text-black cursor-pointer">
+          <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center border-4 border-background text-black cursor-pointer">
             <Camera size={18} />
           </button>
+          <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleAvatarUpload} />
         </div>
         
-        <h1 className="text-2xl font-bold mb-3 text-center">{profile?.name || "Атлет Weirun"}</h1>
+        {isEditing ? (
+          <input type="text" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} className="bg-card border border-border rounded px-3 py-1 text-center text-xl font-bold mb-3 outline-none focus:border-primary" />
+        ) : (
+          <h1 className="text-2xl font-bold mb-3 text-center">{profile?.name || "Атлет Weirun"}</h1>
+        )}
         
         <div className="border border-primary text-primary px-4 py-1.5 rounded-full flex items-center gap-2 text-xs font-display tracking-widest uppercase">
           <Zap size={14} className="fill-primary" />
-          {profile?.user_role === 'coach' ? "Тренер" : "Level 1 Athlete"}
+          Level 1 Athlete
         </div>
       </div>
 
       <div className="glass-card p-6 grid grid-cols-3 divide-x divide-border mb-8 text-center">
-        <div>
-          <p className="font-display text-3xl font-bold">{totalKm} <span className="text-sm text-muted">км</span></p>
-          <p className="text-[10px] text-primary uppercase font-display tracking-widest mt-1">Дистанция</p>
-        </div>
-        <div>
-          <p className="font-display text-3xl font-bold">{profile?.total_run_count || 0}</p>
-          <p className="text-[10px] text-primary uppercase font-display tracking-widest mt-1">Забеги</p>
-        </div>
-        <div>
-          <p className="font-display text-3xl font-bold">{avgPace}</p>
-          <p className="text-[10px] text-primary uppercase font-display tracking-widest mt-1">Ср. темп</p>
-        </div>
+        <div><p className="font-display text-3xl font-bold">{totalKm}</p><p className="text-[10px] text-primary uppercase mt-1">Дистанция</p></div>
+        <div><p className="font-display text-3xl font-bold">{profile?.total_run_count || 0}</p><p className="text-[10px] text-primary uppercase mt-1">Забеги</p></div>
+        <div><p className="font-display text-3xl font-bold">{avgPace}</p><p className="text-[10px] text-primary uppercase mt-1">Ср. темп</p></div>
       </div>
 
       <h3 className="text-xs font-display tracking-widest text-muted uppercase mb-3">Физические показатели</h3>
       <div className="glass-card p-6 flex justify-between">
-        <div>
-          <p className="text-[10px] text-muted uppercase mb-1 flex items-center gap-1">Вес</p>
-          <p className="font-bold text-lg">{profile?.weight || "--"} кг</p>
+        <div className="flex flex-col items-center">
+          <p className="text-[10px] text-muted uppercase mb-1">Вес</p>
+          {isEditing ? <input type="number" value={editForm.weight} onChange={e => setEditForm({...editForm, weight: Number(e.target.value)})} className="w-16 bg-transparent border-b border-primary text-center font-bold text-lg outline-none" /> : <p className="font-bold text-lg">{profile?.weight || "--"} кг</p>}
         </div>
-        <div>
-          <p className="text-[10px] text-muted uppercase mb-1 flex items-center gap-1">Рост</p>
-          <p className="font-bold text-lg">{profile?.height || "--"} см</p>
+        <div className="flex flex-col items-center">
+          <p className="text-[10px] text-muted uppercase mb-1">Рост</p>
+          {isEditing ? <input type="number" value={editForm.height} onChange={e => setEditForm({...editForm, height: Number(e.target.value)})} className="w-16 bg-transparent border-b border-primary text-center font-bold text-lg outline-none" /> : <p className="font-bold text-lg">{profile?.height || "--"} см</p>}
         </div>
-        <div>
-          <p className="text-[10px] text-muted uppercase mb-1 flex items-center gap-1">Возраст</p>
-          <p className="font-bold text-lg">{calculateAge(profile?.birth_date)} л.</p>
+        <div className="flex flex-col items-center">
+          <p className="text-[10px] text-muted uppercase mb-1">Г. рожд.</p>
+          {isEditing ? <input type="number" value={editForm.birth_year} onChange={e => setEditForm({...editForm, birth_year: Number(e.target.value)})} className="w-16 bg-transparent border-b border-primary text-center font-bold text-lg outline-none" /> : <p className="font-bold text-lg">{calculateAge(profile?.birth_date)} л.</p>}
         </div>
       </div>
     </div>
