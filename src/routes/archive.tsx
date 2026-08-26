@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Activity, X, Navigation } from "lucide-react";
+import Map, { Source, Layer } from "react-map-gl";
+import maplibreGl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { supabase } from "@/lib/supabase";
 import { formatDuration, calculatePace, formatDate } from "@/lib/utils";
 
@@ -30,6 +33,34 @@ function Archive() {
     loadRuns();
   }, []);
 
+  // Подготовка данных карты для выбранного забега
+  const mapData = useMemo(() => {
+    if (!selectedRun?.path_points_json) return null;
+    try {
+      let parsed = typeof selectedRun.path_points_json === 'string' 
+        ? JSON.parse(selectedRun.path_points_json) 
+        : selectedRun.path_points_json;
+        
+      if (!Array.isArray(parsed) || parsed.length === 0) return null;
+
+      // Конвертируем объекты Android [{latitude, longitude}] -> в массив [[lon, lat]] для MapLibre
+      const coords = parsed.map((p: any) => [
+        p.longitude ?? p[0], 
+        p.latitude ?? p[1]
+      ]);
+
+      if (coords.length === 0) return null;
+
+      return {
+        center: { lon: coords[0][0], lat: coords[0][1] },
+        geojson: { type: "Feature" as const, properties: {}, geometry: { type: "LineString" as const, coordinates: coords } }
+      };
+    } catch (e) {
+      console.error("Ошибка парсинга трека", e);
+      return null;
+    }
+  }, [selectedRun]);
+
   const totalKm = (stats.distance / 1000).toFixed(2);
   const avgDist = stats.count > 0 ? ((stats.distance / 1000) / stats.count).toFixed(1) : "0.0";
 
@@ -38,7 +69,7 @@ function Archive() {
       <h1 className="font-display text-4xl font-bold uppercase mb-1">Архив треков</h1>
       <p className="text-primary text-xs font-display tracking-widest uppercase mb-8">Твоя лента побед и рекордов</p>
 
-      {/* Модалка деталей трека */}
+      {/* МОДАЛКА ДЕТАЛЕЙ */}
       {selectedRun && (
         <div className="fixed inset-0 z-50 bg-background overflow-y-auto p-4 pt-10">
           <div className="flex justify-between items-center mb-8">
@@ -50,15 +81,29 @@ function Archive() {
           </div>
           
           <div className="glass-card p-6 mb-6 bg-[#0A0D12]">
-             {/* Заглушка для карты маршрута */}
-             <div className="flex items-center justify-center h-40 border-2 border-dashed border-border rounded-xl text-muted mb-6 bg-card/30">
-                <Navigation size={32} className="mr-2 opacity-50 text-primary"/> 
-                <span className="font-display tracking-widest uppercase text-xs">
-                  {selectedRun.path_points_json && selectedRun.path_points_json !== "[]" ? "Маршрут сохранен" : "GPS трек отсутствует"}
-                </span>
+             
+             {/* РЕАЛЬНАЯ КАРТА МАРШРУТА */}
+             <div className="h-48 rounded-xl overflow-hidden mb-6 relative bg-card/30">
+               {mapData ? (
+                 <Map
+                   mapLib={maplibreGl as any}
+                   initialViewState={{ longitude: mapData.center.lon, latitude: mapData.center.lat, zoom: 14 }}
+                   style={{ width: "100%", height: "100%" }}
+                   mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
+                   interactive={false}
+                 >
+                   <Source id="archive-route" type="geojson" data={mapData.geojson as any}>
+                     <Layer id="archive-line" type="line" layout={{ "line-join": "round", "line-cap": "round" }} paint={{ "line-color": "#C8F808", "line-width": 4 }} />
+                   </Source>
+                 </Map>
+               ) : (
+                 <div className="w-full h-full flex items-center justify-center border-2 border-dashed border-border rounded-xl text-muted">
+                   <Navigation size={32} className="mr-2 opacity-50 text-primary"/> 
+                   <span className="font-display tracking-widest uppercase text-xs">GPS трек отсутствует</span>
+                 </div>
+               )}
              </div>
              
-             {/* Сетка параметров */}
              <div className="grid grid-cols-2 gap-6 text-center border-b border-border pb-6 mb-6">
                 <div>
                   <p className="text-[10px] text-muted uppercase font-display tracking-widest mb-1">Дистанция</p>
@@ -98,7 +143,7 @@ function Archive() {
         </div>
       )}
 
-      {/* Дальше весь остальной код архива (Сводка и Список), он не меняется */}
+      {/* СВОДКА */}
       <div className="glass-card p-6 mb-8">
         <div className="flex justify-between items-start mb-6">
           <div><p className="text-xs text-muted uppercase mb-1">Общий километраж</p><p className="font-display text-5xl font-bold">{totalKm}</p></div>
@@ -110,6 +155,7 @@ function Archive() {
         </div>
       </div>
 
+      {/* СПИСОК */}
       {loading ? <div className="text-center text-muted">Загрузка...</div> : (
         <div className="space-y-4">
           {runs.map((run) => (
