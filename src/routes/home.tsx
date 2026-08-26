@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
-// ДОБАВИЛ FOOTPRINTS В ИМПОРТ:
 import { Play, Square, Pause, Navigation, CloudLightning, Sun, Cloud, CloudRain, Heart, Activity, Flame, Clock, Footprints } from "lucide-react";
 import Map, { Marker, Source, Layer } from "react-map-gl";
 import maplibreGl from "maplibre-gl";
@@ -89,7 +88,7 @@ function Home() {
       const avg_speed_kmh = (result.distanceMeters / 1000) / (result.durationSec / 3600);
       const calories = Math.round((result.distanceMeters / 1000) * 70); 
       
-      // ИСПРАВЛЕННЫЙ ЗАПРОС В БАЗУ ДАННЫХ
+      // ИМЕННО WEIRUN И НИКАК ИНАЧЕ
       await supabase.from('cloud_runs').insert({
         user_id: userId,
         timestamp: Date.now(),
@@ -99,10 +98,10 @@ function Home() {
         steps: result.steps,
         avg_speed_kmh: avg_speed_kmh,
         title: "Бег на улице",
-        path_points_json: JSON.stringify(result.path),
-        source: "WEIRUN" // <-- Точно как в Android
+        path_points_json: JSON.stringify(result.path), // Теперь формат [ {latitude, longitude} ]
+        source: "WEIRUN" // <-- ЖЕЛЕЗНО
       });
-      alert("Тренировка сохранена!");
+      alert("Тренировка WEIRUN сохранена!");
     } else {
       alert("Дистанция слишком мала для сохранения (минимум 20 м).");
     }
@@ -113,8 +112,10 @@ function Home() {
   const currentPaceStr = calculatePace(currentPaceSec, 1000); 
   const liveCalories = Math.round((distance / 1000) * 70);
   
-  const currentLoc = path.length > 0 ? { lon: path[path.length-1][0], lat: path[path.length-1][1] } : location;
-  const geojsonLine = { type: "Feature" as const, properties: {}, geometry: { type: "LineString" as const, coordinates: path } };
+  // Конвертируем объекты Android формата в массив чисел для библиотеки карты MapLibre
+  const mapCoordinates = path.map(p => [p.longitude, p.latitude]);
+  const currentLoc = path.length > 0 ? { lon: path[path.length-1].longitude, lat: path[path.length-1].latitude } : location;
+  const geojsonLine = { type: "Feature" as const, properties: {}, geometry: { type: "LineString" as const, coordinates: mapCoordinates } };
 
   return (
     <div className="h-[100dvh] w-full relative overflow-hidden bg-background">
@@ -131,7 +132,7 @@ function Home() {
             <Marker longitude={currentLoc.lon} latitude={currentLoc.lat} anchor="center">
               <div className="w-6 h-6 bg-blue-500 rounded-full border-4 border-white shadow-[0_0_20px_rgba(59,130,246,0.8)]" />
             </Marker>
-            {path.length > 1 && (
+            {mapCoordinates.length > 1 && (
               <Source id="route" type="geojson" data={geojsonLine as any}>
                 <Layer id="route-line" type="line" layout={{ "line-join": "round", "line-cap": "round" }} paint={{ "line-color": "#C8F808", "line-width": 6 }} />
               </Source>
@@ -211,7 +212,7 @@ function Home() {
           ) : (
             <>
               <div className="text-center mb-8 bg-black/40 backdrop-blur-sm rounded-3xl py-4 px-12 border border-white/5">
-                <h1 className="font-display text-[100px] md:text-[120px] leading-none font-bold tracking-tight text-white drop-shadow-xl">
+                <h1 className="font-display text-[100px] leading-none font-bold tracking-tight text-white drop-shadow-xl">
                   {(distance / 1000).toFixed(2).replace('.', ',')}
                 </h1>
                 <p className="text-primary font-display tracking-[0.3em] uppercase mt-1 text-sm font-bold">Километров</p>
@@ -220,33 +221,33 @@ function Home() {
               <div className="grid grid-cols-3 gap-3 mb-8 w-full">
                 <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-xl">
                   <Activity className="text-primary mb-1" size={20} strokeWidth={2.5}/>
-                  <p className="font-bold text-xl leading-tight font-display">{currentPaceStr}</p>
-                  <p className="text-[9px] text-muted uppercase font-display tracking-widest mt-1">Темп</p>
+                  <p className="font-bold text-lg leading-tight font-display">{currentPaceStr}</p>
+                  <p className="text-[9px] text-muted uppercase font-display tracking-widest">Темп</p>
                 </div>
                 <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-xl">
                   <Clock className="text-primary mb-1" size={20} strokeWidth={2.5}/>
-                  <p className="font-bold text-xl leading-tight font-display">{formatStopwatch(elapsedTimeMs)}</p>
-                  <p className="text-[9px] text-muted uppercase font-display tracking-widest mt-1">Время</p>
+                  <p className="font-bold text-lg leading-tight font-display">{formatStopwatch(elapsedTimeMs)}</p>
+                  <p className="text-[9px] text-muted uppercase font-display tracking-widest">Время</p>
                 </div>
                 <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-xl">
                   <Footprints className="text-primary mb-1" size={20} strokeWidth={2.5}/>
-                  <p className="font-bold text-xl leading-tight font-display">{steps}</p>
-                  <p className="text-[9px] text-muted uppercase font-display tracking-widest mt-1">Шаги</p>
+                  <p className="font-bold text-lg leading-tight font-display">{steps}</p>
+                  <p className="text-[9px] text-muted uppercase font-display tracking-widest">Шаги</p>
                 </div>
                 <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-xl">
                   <Activity className="text-primary mb-1" size={20} strokeWidth={2.5}/>
-                  <p className="font-bold text-xl leading-tight font-display">{avgPace}</p>
-                  <p className="text-[9px] text-muted uppercase font-display tracking-widest mt-1">Ср. темп</p>
+                  <p className="font-bold text-lg leading-tight font-display">{avgPace}</p>
+                  <p className="text-[9px] text-muted uppercase font-display tracking-widest">Ср. темп</p>
                 </div>
                 <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-xl">
                   <Flame className="text-primary mb-1" size={20} strokeWidth={2.5}/>
-                  <p className="font-bold text-xl leading-tight font-display">{liveCalories}</p>
-                  <p className="text-[9px] text-muted uppercase font-display tracking-widest mt-1">Ккал</p>
+                  <p className="font-bold text-lg leading-tight font-display">{liveCalories}</p>
+                  <p className="text-[9px] text-muted uppercase font-display tracking-widest">Ккал</p>
                 </div>
                 <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-xl opacity-60">
                   <Heart className="text-muted mb-1" size={20} strokeWidth={2.5}/>
                   <p className="font-bold text-lg leading-tight font-display">--</p>
-                  <p className="text-[8px] text-muted uppercase font-display tracking-widest mt-1 leading-tight text-center">Без датчика</p>
+                  <p className="text-[8px] text-muted uppercase font-display tracking-widest text-center leading-tight">Без датчика</p>
                 </div>
               </div>
 
