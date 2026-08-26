@@ -5,7 +5,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Формат для архива (без долей секунд)
 export function formatDuration(sec: number | null | undefined): string {
   if (!sec) return "00:00";
   const h = Math.floor(sec / 3600);
@@ -15,7 +14,6 @@ export function formatDuration(sec: number | null | undefined): string {
   return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
-// Формат для экрана бега (с десятыми: 00:11.5)
 export function formatStopwatch(ms: number): string {
   if (!ms) return "00:00.0";
   const totalSec = Math.floor(ms / 1000);
@@ -26,12 +24,14 @@ export function formatStopwatch(ms: number): string {
 }
 
 export function calculatePace(durationSec: number | null | undefined, distanceMeters: number | null | undefined): string {
-  if (!distanceMeters || !durationSec || distanceMeters === 0) return "--:--";
+  if (!distanceMeters || distanceMeters < 10 || !durationSec) return "--:--";
   const km = distanceMeters / 1000;
   const secPerKm = durationSec / km;
+  if (!isFinite(secPerKm) || secPerKm < 0) return "--:--";
+  
   const m = Math.floor(secPerKm / 60);
   const s = Math.floor(secPerKm % 60);
-  if (m > 99) return ">99:59"; // Если стоим на месте
+  if (m > 99) return ">99:59"; 
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
