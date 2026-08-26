@@ -4,12 +4,14 @@ import { getDistanceMeters } from "./utils";
 const SILENT_AUDIO = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
 
 interface TrackPoint { lat: number; lon: number; time: number; }
+// Новый интерфейс специально для базы данных Android
+interface AndroidPathPoint { latitude: number; longitude: number; timestamp: number; }
 
 export function useTracker() {
   const [runState, setRunState] = useState<"idle" | "running" | "paused">("idle");
   const [distance, setDistance] = useState(0);
   const [elapsedTimeMs, setElapsedTimeMs] = useState(0);
-  const [path, setPath] = useState<number[][]>([]);
+  const [path, setPath] = useState<AndroidPathPoint[]>([]); // <-- ТЕПЕРЬ ХРАНИМ КАК В ANDROID
   const [steps, setSteps] = useState(0);
   const [currentPaceSec, setCurrentPaceSec] = useState<number>(0);
 
@@ -24,7 +26,6 @@ export function useTracker() {
     timerId: null as number | null,
   });
 
-  // --- ВОССТАНОВЛЕНИЕ (Offline-first) ---
   useEffect(() => {
     const saved = localStorage.getItem("weifox_active_run");
     if (saved) {
@@ -51,7 +52,6 @@ export function useTracker() {
     }
   }, [runState, distance, elapsedTimeMs, path, steps]);
 
-  // --- WAKE LOCK И АУДИО ---
   const requestWakeLock = async () => {
     try { if ("wakeLock" in navigator) stateRef.current.wakeLock = await navigator.wakeLock.request("screen"); } 
     catch (err) {}
@@ -70,15 +70,11 @@ export function useTracker() {
     if (stateRef.current.audio) stateRef.current.audio.pause();
   };
 
-  // --- ШАГОМЕР (Универсальный iOS/Android) ---
   const handleDeviceMotion = useCallback((e: DeviceMotionEvent) => {
     if (runState !== "running") return;
     const acc = e.accelerationIncludingGravity;
     if (!acc || acc.x === null) return;
-    
     const mag = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
-    
-    // Снижен порог до 10.8 для корректной работы на Android
     if (mag > 10.8 && Date.now() - stateRef.current.lastStepTime > 300) {
       setSteps(s => s + 1);
       stateRef.current.lastStepTime = Date.now();
@@ -100,12 +96,11 @@ export function useTracker() {
     return () => window.removeEventListener('devicemotion', handleDeviceMotion);
   }, [handleDeviceMotion]);
 
-  // --- ТАЙМЕР И GPS ---
   useEffect(() => {
     if (runState === "running") {
       startBackgroundHacks();
-      
       stateRef.current.startTime = Date.now();
+      
       const updateTimer = () => {
         setElapsedTimeMs(stateRef.current.accumulatedTime + (Date.now() - stateRef.current.startTime));
         stateRef.current.timerId = requestAnimationFrame(updateTimer);
@@ -116,8 +111,6 @@ export function useTracker() {
         stateRef.current.watchId = navigator.geolocation.watchPosition(
           (pos) => {
             const { latitude: lat, longitude: lon, accuracy } = pos.coords;
-            
-            // Смягченный фильтр для квартир/домов: допускаем погрешность до 40м
             if (accuracy > 40) return;
 
             const now = Date.now();
@@ -129,14 +122,14 @@ export function useTracker() {
               const timeDeltaSec = (now - lastPt.time) / 1000;
               const speed = dist / timeDeltaSec;
 
-              // Смягченный фильтр стоянки: 0.4 м/с (~1.4 км/ч), дистанция > 1 метра
               if (speed >= 0.4 && dist > 1) {
                 setDistance(d => d + dist);
-                setPath(p => [...p, [lon, lat]]);
+                // СОХРАНЯЕМ В ФОРМАТЕ ANDROID
+                setPath(p => [...p, { latitude: lat, longitude: lon, timestamp: now }]);
                 setCurrentPaceSec(timeDeltaSec / (dist / 1000));
               }
             } else {
-              setPath(p => [...p, [lon, lat]]);
+              setPath(p => [...p, { latitude: lat, longitude: lon, timestamp: now }]);
             }
 
             lastPoints.push({ lat, lon, time: now });
@@ -159,7 +152,6 @@ export function useTracker() {
     };
   }, [runState]);
 
-  // --- УПРАВЛЕНИЕ ---
   const startRun = () => {
     if (navigator.vibrate) navigator.vibrate(50);
     requestMotionPermission(); 
@@ -180,12 +172,11 @@ export function useTracker() {
     setRunState("idle");
     localStorage.removeItem("weifox_active_run");
     
-    // Копируем данные ДО сброса состояния
     const finalData = {
       durationSec: Math.floor(elapsedTimeMs / 1000),
       distanceMeters: distance,
       steps: steps,
-      path: [...path] // Копируем массив, чтобы он не обнулился при сохранении
+      path: [...path] 
     };
     
     setDistance(0); setElapsedTimeMs(0); setPath([]); setSteps(0); setCurrentPaceSec(0);
