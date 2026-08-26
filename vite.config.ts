@@ -2,9 +2,8 @@ import { defineConfig } from "vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { nitro } from "nitro/vite";
 
-export default defineConfig(({ command, isPreview }) => ({
+export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 8080,
@@ -19,15 +18,6 @@ export default defineConfig(({ command, isPreview }) => ({
   plugins: [
     tailwindcss(),
     tanstackStart(),
-    // Оставляем Nitro для сборки под Vercel
-    ...(command === "build" || isPreview
-      ? [
-          nitro({
-            preset: "vercel",
-            serverDir: "./server",
-          }),
-        ]
-      : []),
     viteReact(),
   ],
-}));
+});
