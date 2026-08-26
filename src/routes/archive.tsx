@@ -14,6 +14,7 @@ function Archive() {
 
   useEffect(() => {
     async function loadRuns() {
+      // Прямой запрос сессии
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) { setLoading(false); return; }
       
@@ -38,7 +39,6 @@ function Archive() {
       <h1 className="font-display text-4xl font-bold uppercase mb-1">Архив треков</h1>
       <p className="text-primary text-xs font-display tracking-widest uppercase mb-8">Твоя лента побед и рекордов</p>
 
-      {/* Модалка деталей трека */}
       {selectedRun && (
         <div className="fixed inset-0 z-50 bg-background overflow-y-auto p-4 pt-10">
           <div className="flex justify-between items-center mb-8">
@@ -46,7 +46,6 @@ function Archive() {
             <button onClick={() => setSelectedRun(null)} className="p-2 bg-card rounded-full"><X size={20}/></button>
           </div>
           
-          {/* Детали (Здесь можно вставить мини-карту с MapLibre, если есть path_points_json) */}
           <div className="glass-card p-6 mb-6 bg-[#0A0D12]">
              <div className="flex items-center justify-center h-40 border-2 border-dashed border-border rounded-xl text-muted mb-6">
                 <Navigation size={32} className="mr-2 opacity-50"/> 
@@ -75,7 +74,6 @@ function Archive() {
         </div>
       )}
 
-      {/* Сводка */}
       <div className="glass-card p-6 mb-8">
         <div className="flex justify-between items-start mb-6">
           <div><p className="text-xs text-muted uppercase mb-1">Общий километраж</p><p className="font-display text-5xl font-bold">{totalKm}</p></div>
@@ -87,7 +85,6 @@ function Archive() {
         </div>
       </div>
 
-      {/* Список */}
       {loading ? <div className="text-center text-muted">Загрузка...</div> : (
         <div className="space-y-4">
           {runs.map((run) => (
