@@ -1,4 +1,4 @@
-import { createFileRoute, useOutletContext } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { Play, Square, Navigation, CloudLightning, Sun, Cloud, CloudRain } from "lucide-react";
 import Map, { Marker, Source, Layer } from "react-map-gl";
@@ -6,13 +6,11 @@ import maplibreGl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { supabase } from "@/lib/supabase";
 import { getDistanceMeters, formatDuration, calculatePace } from "@/lib/utils";
-import type { Session } from "@supabase/supabase-js";
 
 export const Route = createFileRoute("/home")({ component: Home });
 
 function Home() {
-  const { session } = useOutletContext<{ session: Session | null }>();
-  
+  const [userId, setUserId] = useState<string | null>(null);
   const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [city, setCity] = useState("Определение...");
   const [weather, setWeather] = useState<{ temp: number; code: number } | null>(null);
@@ -28,10 +26,16 @@ function Home() {
   const watchIdRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (session?.user?.id) {
-      supabase.from('cloud_runs').select('*').eq('user_id', session.user.id).order('timestamp', { ascending: false }).limit(1)
-        .then(({ data }) => { if (data && data.length > 0) setLastRun(data[0]); });
-    }
+    // 1. Получаем ID пользователя
+    supabase.auth.getSession().then(({ data }) => {
+      const id = data.session?.user?.id;
+      if (id) {
+        setUserId(id);
+        // 2. Грузим последний забег
+        supabase.from('cloud_runs').select('*').eq('user_id', id).order('timestamp', { ascending: false }).limit(1)
+          .then(({ data: runs }) => { if (runs && runs.length > 0) setLastRun(runs[0]); });
+      }
+    });
 
     if ("geolocation" in navigator) {
       watchIdRef.current = navigator.geolocation.watchPosition(
@@ -64,7 +68,7 @@ function Home() {
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isRecording, session?.user?.id, weather]);
+  }, [isRecording, weather]);
 
   const fetchCityAndWeather = async (lat: number, lon: number) => {
     try {
@@ -74,9 +78,7 @@ function Home() {
       const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
       const weatherData = await weatherRes.json();
       setWeather({ temp: Math.round(weatherData.current_weather.temperature), code: weatherData.current_weather.weathercode });
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) {}
   };
 
   const toggleRecording = async () => {
@@ -90,10 +92,10 @@ function Home() {
       setIsRecording(false);
       if (timerRef.current) clearInterval(timerRef.current);
       
-      if (distanceMeters > 50 && session?.user?.id) {
+      if (distanceMeters > 50 && userId) {
         const newRun = {
           id: crypto.randomUUID(),
-          user_id: session.user.id,
+          user_id: userId,
           timestamp: Date.now(),
           duration_seconds: durationSec,
           distance_meters: Math.round(distanceMeters),
@@ -111,11 +113,7 @@ function Home() {
     }
   };
 
-  const geojsonLine = { 
-    type: "Feature" as const, 
-    properties: {}, 
-    geometry: { type: "LineString" as const, coordinates: path } 
-  };
+  const geojsonLine = { type: "Feature" as const, properties: {}, geometry: { type: "LineString" as const, coordinates: path } };
 
   return (
     <div className="h-[100dvh] w-full relative overflow-hidden bg-background">
@@ -190,21 +188,11 @@ function Home() {
             </div>
           )}
 
-          <button 
-            onClick={toggleRecording}
-            className={`w-32 h-32 md:w-40 md:h-40 rounded-full flex flex-col items-center justify-center active:scale-95 transition-all border-[6px] relative cursor-pointer mb-6 ${
-              isRecording 
-                ? 'bg-red-500 border-red-500/30 shadow-[0_0_60px_rgba(239,68,68,0.5)]' 
-                : 'bg-primary border-primary/30 shadow-[0_0_60px_rgba(200,248,8,0.4)]'
-            }`}
-          >
+          <button onClick={toggleRecording} className={`w-32 h-32 md:w-40 md:h-40 rounded-full flex flex-col items-center justify-center active:scale-95 transition-all border-[6px] relative cursor-pointer mb-6 ${isRecording ? 'bg-red-500 border-red-500/30 shadow-[0_0_60px_rgba(239,68,68,0.5)]' : 'bg-primary border-primary/30 shadow-[0_0_60px_rgba(200,248,8,0.4)]'}`}>
             {isRecording && <div className="absolute inset-0 rounded-full border border-red-500/50 animate-ping" />}
             {!isRecording && <div className="absolute inset-0 rounded-full border border-primary/50 animate-ping" />}
-            
             {isRecording ? <Square className="text-white fill-white mb-1" size={32} /> : <Play className="text-black fill-black ml-2 mb-1" size={36} />}
-            <span className={`font-display text-xl font-bold uppercase tracking-widest ${isRecording ? 'text-white' : 'text-black'}`}>
-              {isRecording ? "СТОП" : "СТАРТ"}
-            </span>
+            <span className={`font-display text-xl font-bold uppercase tracking-widest ${isRecording ? 'text-white' : 'text-black'}`}>{isRecording ? "СТОП" : "СТАРТ"}</span>
           </button>
         </div>
       </div>
