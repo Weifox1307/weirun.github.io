@@ -1,33 +1,24 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #0F1115;
-  --color-foreground: #f3f6ef;
-  --color-card: #16191E;
-  --color-card-foreground: #f3f6ef;
-  --color-primary: #c8f808;
-  --color-primary-foreground: #0a1408;
-  --color-muted: #8b9a8c;
-  --color-muted-foreground: #8b9a8c;
-  --color-border: #232830;
-  --color-ring: #c8f808;
-  --color-danger: #ff3b4e;
+  --color-background: #090A0D;
+  --color-foreground: #FFFFFF;
+  --color-card: #13161B;
+  --color-card-foreground: #FFFFFF;
+  --color-primary: #C8F808;
+  --color-primary-foreground: #000000;
+  --color-muted: #7A8490;
+  --color-muted-foreground: #7A8490;
+  --color-border: #22262E;
 
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Barlow Condensed", "Manrope", ui-sans-serif, sans-serif;
-
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
-  --radius-2xl: 32px;
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
   body {
     background: var(--color-background);
@@ -36,42 +27,37 @@
     min-height: 100dvh;
     -webkit-tap-highlight-color: transparent;
   }
-  ::selection {
-    background: var(--color-primary);
-    color: var(--color-primary-foreground);
-  }
 }
 
 @layer components {
-  .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom);
+  .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom) + 80px); }
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  
+  .glass-card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 1.25rem;
   }
-  .pt-safe {
-    padding-top: env(safe-area-inset-top);
-  }
-  .glass {
-    background: color-mix(in oklab, var(--color-card) 72%, transparent);
-    backdrop-filter: blur(22px) saturate(1.25);
-    -webkit-backdrop-filter: blur(22px) saturate(1.25);
-    box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-foreground) 10%, transparent);
-  }
-  .start-orb {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 9.5rem;
-    height: 9.5rem;
-    border-radius: 9999px;
+
+  .neon-button {
     background: var(--color-primary);
     color: var(--color-primary-foreground);
     font-family: var(--font-display);
-    font-weight: 600;
     text-transform: uppercase;
-    box-shadow: 0 12px 36px -10px color-mix(in oklab, var(--color-primary) 40%, transparent);
-    transition: transform 150ms ease;
+    font-weight: 700;
+    transition: transform 0.1s ease, filter 0.2s ease;
   }
-  .start-orb:active {
-    transform: scale(0.96);
+  .neon-button:active {
+    transform: scale(0.95);
+  }
+
+  /* Фейковая карта для главного экрана */
+  .map-bg {
+    background-color: #0A0D12;
+    background-image: 
+      radial-gradient(circle at 50% 50%, rgba(200, 248, 8, 0.05) 0%, transparent 60%),
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 20px 20px, 20px 20px;
   }
 }
