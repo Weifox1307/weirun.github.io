@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
-import { Play, Square, Pause, Navigation, CloudLightning, Sun, Cloud, CloudRain, Heart, Activity, Flame, Clock } from "lucide-react";
+// ДОБАВИЛ FOOTPRINTS В ИМПОРТ:
+import { Play, Square, Pause, Navigation, CloudLightning, Sun, Cloud, CloudRain, Heart, Activity, Flame, Clock, Footprints } from "lucide-react";
 import Map, { Marker, Source, Layer } from "react-map-gl";
 import maplibreGl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -17,7 +18,6 @@ function Home() {
   const [weather, setWeather] = useState<{ temp: number; code: number } | null>(null);
   const [gpsStatus, setGpsStatus] = useState<"Поиск" | "Готов" | "Ошибка">("Поиск");
   
-  // Статистика юзера для плашек до старта
   const [userStats, setUserStats] = useState({ totalDist: 0, avgPace: "0:00" });
   const [lastRun, setLastRun] = useState<any>(null);
 
@@ -30,7 +30,6 @@ function Home() {
       const id = data.session?.user?.id;
       if (id) {
         setUserId(id);
-        // Загрузка статистики
         supabase.from('cloud_runs').select('*').eq('user_id', id).order('timestamp', { ascending: false })
           .then(({ data: runs }) => {
             if (runs && runs.length > 0) {
@@ -90,8 +89,8 @@ function Home() {
       const avg_speed_kmh = (result.distanceMeters / 1000) / (result.durationSec / 3600);
       const calories = Math.round((result.distanceMeters / 1000) * 70); 
       
+      // ИСПРАВЛЕННЫЙ ЗАПРОС В БАЗУ ДАННЫХ
       await supabase.from('cloud_runs').insert({
-        id: crypto.randomUUID(),
         user_id: userId,
         timestamp: Date.now(),
         duration_seconds: result.durationSec,
@@ -101,9 +100,9 @@ function Home() {
         avg_speed_kmh: avg_speed_kmh,
         title: "Бег на улице",
         path_points_json: JSON.stringify(result.path),
-        source: "WEIFOX"
+        source: "WEIRUN" // <-- Точно как в Android
       });
-      alert("Тренировка WEIFOX сохранена!");
+      alert("Тренировка сохранена!");
     } else {
       alert("Дистанция слишком мала для сохранения (минимум 20 м).");
     }
@@ -119,8 +118,6 @@ function Home() {
 
   return (
     <div className="h-[100dvh] w-full relative overflow-hidden bg-background">
-      
-      {/* КАРТА */}
       <div className="absolute inset-0 z-0">
         {currentLoc ? (
           <Map
@@ -128,7 +125,7 @@ function Home() {
             longitude={currentLoc.lon} latitude={currentLoc.lat} zoom={15}
             style={{ width: "100%", height: "100%" }}
             mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
-            dragPan={runState === "idle"} // Разрешаем свайпать карту только ДО старта
+            dragPan={runState === "idle"} 
             scrollZoom={runState === "idle"}
           >
             <Marker longitude={currentLoc.lon} latitude={currentLoc.lat} anchor="center">
@@ -148,7 +145,6 @@ function Home() {
 
       <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between pt-[60px] pb-[90px] px-4">
         
-        {/* ВЕРХ: ПРИВЕТСТВИЕ И ПОГОДА */}
         <div className="flex justify-between items-start pointer-events-auto">
           {runState === "idle" ? (
             <div>
@@ -177,11 +173,9 @@ function Home() {
           )}
         </div>
 
-        {/* НИЗ: КНОПКИ И ПАРАМЕТРЫ */}
         <div className="flex flex-col items-center pointer-events-auto w-full max-w-[500px] mx-auto">
           {runState === "idle" ? (
             <>
-              {/* ПЛАШКИ ДО СТАРТА (Скриншот 7) */}
               <div className="flex justify-between w-full px-2 mb-8">
                 <div className="bg-black/80 border border-white/10 p-4 rounded-2xl backdrop-blur-xl w-[48%] shadow-xl">
                   <p className="text-[10px] text-white/60 uppercase font-display tracking-widest mb-1">Всего преодолено</p>
@@ -216,9 +210,8 @@ function Home() {
             </>
           ) : (
             <>
-              {/* ИНТЕРФЕЙС БЕГА (Скриншот 6) */}
               <div className="text-center mb-8 bg-black/40 backdrop-blur-sm rounded-3xl py-4 px-12 border border-white/5">
-                <h1 className="font-display text-[100px] leading-none font-bold tracking-tight text-white drop-shadow-xl">
+                <h1 className="font-display text-[100px] md:text-[120px] leading-none font-bold tracking-tight text-white drop-shadow-xl">
                   {(distance / 1000).toFixed(2).replace('.', ',')}
                 </h1>
                 <p className="text-primary font-display tracking-[0.3em] uppercase mt-1 text-sm font-bold">Километров</p>
@@ -226,34 +219,34 @@ function Home() {
 
               <div className="grid grid-cols-3 gap-3 mb-8 w-full">
                 <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-xl">
-                  <Activity className="text-primary mb-1" size={20} />
-                  <p className="font-bold text-lg leading-tight font-display">{currentPaceStr}</p>
-                  <p className="text-[9px] text-muted uppercase font-display tracking-widest">Темп</p>
+                  <Activity className="text-primary mb-1" size={20} strokeWidth={2.5}/>
+                  <p className="font-bold text-xl leading-tight font-display">{currentPaceStr}</p>
+                  <p className="text-[9px] text-muted uppercase font-display tracking-widest mt-1">Темп</p>
                 </div>
                 <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-xl">
-                  <Clock className="text-primary mb-1" size={20} />
-                  <p className="font-bold text-lg leading-tight font-display">{formatStopwatch(elapsedTimeMs)}</p>
-                  <p className="text-[9px] text-muted uppercase font-display tracking-widest">Время</p>
+                  <Clock className="text-primary mb-1" size={20} strokeWidth={2.5}/>
+                  <p className="font-bold text-xl leading-tight font-display">{formatStopwatch(elapsedTimeMs)}</p>
+                  <p className="text-[9px] text-muted uppercase font-display tracking-widest mt-1">Время</p>
                 </div>
                 <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-xl">
-                  <Footprints className="text-primary mb-1" size={20} />
-                  <p className="font-bold text-lg leading-tight font-display">{steps}</p>
-                  <p className="text-[9px] text-muted uppercase font-display tracking-widest">Шаги</p>
+                  <Footprints className="text-primary mb-1" size={20} strokeWidth={2.5}/>
+                  <p className="font-bold text-xl leading-tight font-display">{steps}</p>
+                  <p className="text-[9px] text-muted uppercase font-display tracking-widest mt-1">Шаги</p>
                 </div>
                 <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-xl">
-                  <Activity className="text-primary mb-1" size={20} />
-                  <p className="font-bold text-lg leading-tight font-display">{avgPace}</p>
-                  <p className="text-[9px] text-muted uppercase font-display tracking-widest">Ср. темп</p>
+                  <Activity className="text-primary mb-1" size={20} strokeWidth={2.5}/>
+                  <p className="font-bold text-xl leading-tight font-display">{avgPace}</p>
+                  <p className="text-[9px] text-muted uppercase font-display tracking-widest mt-1">Ср. темп</p>
                 </div>
                 <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-xl">
-                  <Flame className="text-primary mb-1" size={20} />
-                  <p className="font-bold text-lg leading-tight font-display">{liveCalories}</p>
-                  <p className="text-[9px] text-muted uppercase font-display tracking-widest">Ккал</p>
+                  <Flame className="text-primary mb-1" size={20} strokeWidth={2.5}/>
+                  <p className="font-bold text-xl leading-tight font-display">{liveCalories}</p>
+                  <p className="text-[9px] text-muted uppercase font-display tracking-widest mt-1">Ккал</p>
                 </div>
                 <div className="bg-card/90 border border-white/10 p-3 rounded-2xl flex flex-col items-center justify-center backdrop-blur-xl opacity-60">
-                  <Heart className="text-muted mb-1" size={20} />
+                  <Heart className="text-muted mb-1" size={20} strokeWidth={2.5}/>
                   <p className="font-bold text-lg leading-tight font-display">--</p>
-                  <p className="text-[8px] text-muted uppercase font-display tracking-widest text-center leading-tight">Без датчика</p>
+                  <p className="text-[8px] text-muted uppercase font-display tracking-widest mt-1 leading-tight text-center">Без датчика</p>
                 </div>
               </div>
 
@@ -261,6 +254,7 @@ function Home() {
                 <button onClick={runState === "running" ? pauseRun : startRun} className="w-[80px] h-[80px] rounded-full bg-[#1C2026] flex items-center justify-center active:scale-95 transition-transform">
                   {runState === "running" ? <Pause className="text-white fill-white" size={32} /> : <Play className="text-white fill-white ml-2" size={36} />}
                 </button>
+                
                 <button 
                   onPointerDown={handleStopStart} onPointerUp={handleStopCancel} onPointerLeave={handleStopCancel}
                   className="flex-1 rounded-full bg-[#FF3B4E] flex items-center justify-center gap-3 relative overflow-hidden active:scale-[0.98] transition-transform shadow-[0_0_30px_rgba(255,59,78,0.3)] select-none touch-none"
