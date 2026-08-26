@@ -18,9 +18,8 @@ function Home() {
   const [weather, setWeather] = useState<{ temp: number; code: number } | null>(null);
   const [gpsStatus, setGpsStatus] = useState<"Поиск" | "Готов" | "Ошибка">("Поиск");
 
-  // Состояния трекера
   const [isRecording, setIsRecording] = useState(false);
-  const [path, setPath] = useState<number[][]>([]); // [lon, lat][] для MapLibre
+  const [path, setPath] = useState<number[][]>([]); 
   const [distanceMeters, setDistanceMeters] = useState(0);
   const [durationSec, setDurationSec] = useState(0);
   const [lastRun, setLastRun] = useState<any>(null);
@@ -29,7 +28,6 @@ function Home() {
   const watchIdRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // Подгружаем последний забег для плашки внизу
     if (session?.user?.id) {
       supabase.from('cloud_runs').select('*').eq('user_id', session.user.id).order('timestamp', { ascending: false }).limit(1)
         .then(({ data }) => { if (data && data.length > 0) setLastRun(data[0]); });
@@ -43,9 +41,8 @@ function Home() {
           setLocation({ lat, lon });
           setGpsStatus("Готов");
           
-          if (!weather) fetchCityAndWeather(lat, lon); // Грузим погоду 1 раз
+          if (!weather) fetchCityAndWeather(lat, lon); 
 
-          // Если пишем трек - добавляем точку и считаем дистанцию
           if (isRecording) {
             setPath(prev => {
               const newPath = [...prev, [lon, lat]];
@@ -67,29 +64,29 @@ function Home() {
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isRecording]); // Перезапускаем watchPosition при старте/стопе
+  }, [isRecording, session?.user?.id, weather]);
 
   const fetchCityAndWeather = async (lat: number, lon: number) => {
     try {
       const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`);
       const geoData = await geoRes.json();
-      setCity(geoData.address.city || geoData.address.town || "Город");
+      setCity(geoData.address?.city || geoData.address?.town || "Город");
       const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
       const weatherData = await weatherRes.json();
       setWeather({ temp: Math.round(weatherData.current_weather.temperature), code: weatherData.current_weather.weathercode });
-    } catch (e) {}
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const toggleRecording = async () => {
     if (!isRecording) {
-      // СТАРТ
       setIsRecording(true);
       setPath(location ? [[location.lon, location.lat]] : []);
       setDistanceMeters(0);
       setDurationSec(0);
       timerRef.current = setInterval(() => setDurationSec(s => s + 1), 1000);
     } else {
-      // СТОП И СОХРАНЕНИЕ
       setIsRecording(false);
       if (timerRef.current) clearInterval(timerRef.current);
       
@@ -114,27 +111,25 @@ function Home() {
     }
   };
 
-  // Геометрия линии маршрута для карты
-  const geojsonLine = { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: path } };
+  const geojsonLine = { 
+    type: "Feature" as const, 
+    properties: {}, 
+    geometry: { type: "LineString" as const, coordinates: path } 
+  };
 
   return (
     <div className="h-[100dvh] w-full relative overflow-hidden bg-background">
-      
-      {/* КАРТА НА ВЕСЬ ЭКРАН */}
       <div className="absolute inset-0 z-0">
         {location ? (
           <Map
-            mapLib={maplibreGl}
+            mapLib={maplibreGl as any}
             initialViewState={{ longitude: location.lon, latitude: location.lat, zoom: 15 }}
             style={{ width: "100%", height: "100%" }}
             mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
           >
-            {/* Точка пользователя */}
             <Marker longitude={location.lon} latitude={location.lat} anchor="center">
               <div className="w-6 h-6 bg-blue-500 rounded-full border-4 border-white shadow-[0_0_20px_rgba(59,130,246,0.8)]" />
             </Marker>
-            
-            {/* Отрисовка маршрута */}
             {path.length > 1 && (
               <Source id="route" type="geojson" data={geojsonLine as any}>
                 <Layer id="route-line" type="line" layout={{ "line-join": "round", "line-cap": "round" }} paint={{ "line-color": "#C8F808", "line-width": 6 }} />
@@ -147,10 +142,7 @@ function Home() {
         <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-transparent to-background/90 pointer-events-none" />
       </div>
 
-      {/* ИНТЕРФЕЙС ПОВЕРХ КАРТЫ */}
       <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between pt-[80px] pb-[100px] px-4">
-        
-        {/* Верхняя часть: Приветствие и Погода */}
         <div className="flex justify-between items-start pointer-events-auto">
           <div>
             <p className="text-white drop-shadow-md text-sm mb-1">Доброй ночи, Атлет 👋</p>
@@ -169,9 +161,7 @@ function Home() {
           </div>
         </div>
 
-        {/* Нижняя часть: Кнопка Старт/Стоп и показатели */}
         <div className="flex flex-col items-center pointer-events-auto w-full max-w-[500px] mx-auto">
-          
           {isRecording ? (
             <div className="flex justify-between w-full px-2 mb-8">
               <div className="bg-black/80 border border-white/10 p-4 rounded-2xl backdrop-blur-md w-[31%] text-center">
