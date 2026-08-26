@@ -1,65 +1,78 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { LogOut, Activity } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { Camera, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({ component: Profile });
 
 function Profile() {
-  const [profile, setProfile] = useState<any>(null);
-  const router = useRouter();
-
-  useEffect(() => {
-    async function loadProfile() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        // Запрос к таблице profiles в Supabase
-        const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-        setProfile(data || { full_name: user.email, total_distance: 0, total_runs: 0 });
-      }
-    }
-    loadProfile();
-  }, []);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.navigate({ to: "/login" });
-  };
-
-  if (!profile) return <div className="flex h-screen items-center justify-center">Загрузка...</div>;
-
   return (
-    <div className="pt-safe px-6 py-8 pb-24">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-display font-bold uppercase">Профиль</h1>
-        <button onClick={handleLogout} className="p-2 bg-card rounded-full text-danger"><LogOut size={20}/></button>
+    <div className="pb-safe px-4 pt-6">
+      
+      {/* Аватар и Имя */}
+      <div className="flex flex-col items-center mb-8 relative">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-10" />
+        
+        <div className="relative mb-4">
+          <div className="w-32 h-32 rounded-full border-[3px] border-primary p-1">
+            <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-4xl text-muted overflow-hidden">
+              <img src="/noise.png" className="opacity-20 absolute inset-0 object-cover" alt=""/>
+              RB
+            </div>
+          </div>
+          <button className="absolute bottom-0 right-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center border-4 border-background text-black">
+            <Camera size={18} />
+          </button>
+        </div>
+        
+        <h1 className="text-2xl font-bold mb-3">Roman Bekov</h1>
+        
+        <div className="border border-primary text-primary px-4 py-1.5 rounded-full flex items-center gap-2 text-xs font-display tracking-widest uppercase">
+          <Zap size={14} className="fill-primary" />
+          Level 1 Athlete
+        </div>
       </div>
 
-      <div className="glass rounded-3xl p-6 flex flex-col items-center mb-8">
-        <div className="w-24 h-24 bg-primary/20 rounded-full flex items-center justify-center mb-4 border-2 border-primary">
-          <span className="text-3xl text-primary font-bold">{profile.full_name?.charAt(0).toUpperCase()}</span>
+      {/* Главная статистика */}
+      <div className="glass-card p-6 grid grid-cols-3 divide-x divide-border mb-8 text-center">
+        <div>
+          <p className="font-display text-3xl font-bold">98.2 <span className="text-sm text-muted">км</span></p>
+          <p className="text-[10px] text-primary uppercase font-display tracking-widest mt-1">Дистанция</p>
         </div>
-        <h2 className="text-xl font-bold">{profile.full_name}</h2>
-        <p className="text-muted text-sm uppercase tracking-widest mt-1">Runner ID: #{profile.id?.substring(0,6)}</p>
+        <div>
+          <p className="font-display text-3xl font-bold">7</p>
+          <p className="text-[10px] text-primary uppercase font-display tracking-widest mt-1">Забеги</p>
+        </div>
+        <div>
+          <p className="font-display text-3xl font-bold">4:41</p>
+          <p className="text-[10px] text-primary uppercase font-display tracking-widest mt-1">Ср. темп</p>
+        </div>
       </div>
 
-      <h3 className="font-display text-xl uppercase text-primary mb-4">Статистика</h3>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-card p-4 rounded-2xl border border-border">
-          <Activity className="text-primary mb-2" size={24} />
-          <p className="text-sm text-muted uppercase">Километраж</p>
-          <p className="text-3xl font-bold font-display">{profile.total_distance?.toFixed(1) || 0} <span className="text-lg">км</span></p>
+      {/* Награды */}
+      <h3 className="text-xs font-display tracking-widest text-muted uppercase mb-3">Коллекция наград</h3>
+      <div className="glass-card p-6 mb-8 flex gap-4 overflow-x-auto">
+        <div className="w-16 h-16 rounded-full border border-primary/30 bg-primary/5 flex items-center justify-center">
+          <span className="text-primary font-display font-bold text-xl">W</span>
         </div>
-        <div className="bg-card p-4 rounded-2xl border border-border">
-          <TrophyIcon className="text-primary mb-2" size={24} />
-          <p className="text-sm text-muted uppercase">Забеги</p>
-          <p className="text-3xl font-bold font-display">{profile.total_runs || 0}</p>
+        <div className="w-16 h-16 rounded-full border border-border bg-card/50" />
+        <div className="w-16 h-16 rounded-full border border-border bg-card/50" />
+      </div>
+
+      {/* Физические показатели */}
+      <h3 className="text-xs font-display tracking-widest text-muted uppercase mb-3">Физические показатели</h3>
+      <div className="glass-card p-6 flex justify-between">
+        <div>
+          <p className="text-[10px] text-muted uppercase mb-1 flex items-center gap-1">Вес</p>
+          <p className="font-bold text-lg">60.1 кг</p>
+        </div>
+        <div>
+          <p className="text-[10px] text-muted uppercase mb-1 flex items-center gap-1">Рост</p>
+          <p className="font-bold text-lg">172 см</p>
+        </div>
+        <div>
+          <p className="text-[10px] text-muted uppercase mb-1 flex items-center gap-1">Возраст</p>
+          <p className="font-bold text-lg">21 г.</p>
         </div>
       </div>
     </div>
   );
-}
-
-function TrophyIcon(props: any) {
-  return <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .172.16.0.4 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
 }
