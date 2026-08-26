@@ -4,14 +4,13 @@ import { getDistanceMeters } from "./utils";
 const SILENT_AUDIO = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
 
 interface TrackPoint { lat: number; lon: number; time: number; }
-// Новый интерфейс специально для базы данных Android
 interface AndroidPathPoint { latitude: number; longitude: number; timestamp: number; }
 
 export function useTracker() {
   const [runState, setRunState] = useState<"idle" | "running" | "paused">("idle");
   const [distance, setDistance] = useState(0);
   const [elapsedTimeMs, setElapsedTimeMs] = useState(0);
-  const [path, setPath] = useState<AndroidPathPoint[]>([]); // <-- ТЕПЕРЬ ХРАНИМ КАК В ANDROID
+  const [path, setPath] = useState<AndroidPathPoint[]>([]);
   const [steps, setSteps] = useState(0);
   const [currentPaceSec, setCurrentPaceSec] = useState<number>(0);
 
@@ -75,7 +74,7 @@ export function useTracker() {
     const acc = e.accelerationIncludingGravity;
     if (!acc || acc.x === null) return;
     const mag = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
-    if (mag > 10.8 && Date.now() - stateRef.current.lastStepTime > 300) {
+    if (mag > 10.5 && Date.now() - stateRef.current.lastStepTime > 300) {
       setSteps(s => s + 1);
       stateRef.current.lastStepTime = Date.now();
     }
@@ -124,7 +123,6 @@ export function useTracker() {
 
               if (speed >= 0.4 && dist > 1) {
                 setDistance(d => d + dist);
-                // СОХРАНЯЕМ В ФОРМАТЕ ANDROID
                 setPath(p => [...p, { latitude: lat, longitude: lon, timestamp: now }]);
                 setCurrentPaceSec(timeDeltaSec / (dist / 1000));
               }
@@ -172,10 +170,14 @@ export function useTracker() {
     setRunState("idle");
     localStorage.removeItem("weifox_active_run");
     
+    // ГИБРИДНЫЕ ШАГИ: Если акселерометр насчитал мало (сбой ОС), вычисляем шаги по дистанции
+    const estimatedSteps = Math.round((distance / 1000) * 1300);
+    const finalSteps = steps > estimatedSteps * 0.3 ? steps : estimatedSteps;
+
     const finalData = {
       durationSec: Math.floor(elapsedTimeMs / 1000),
       distanceMeters: distance,
-      steps: steps,
+      steps: finalSteps,
       path: [...path] 
     };
     
@@ -185,5 +187,8 @@ export function useTracker() {
     return finalData;
   };
 
-  return { runState, distance, elapsedTimeMs, path, steps, currentPaceSec, startRun, pauseRun, stopRun };
+  // Экспортируем гибридные шаги для UI "в реальном времени"
+  const liveSteps = steps > 0 ? steps : Math.round((distance / 1000) * 1300);
+
+  return { runState, distance, elapsedTimeMs, path, steps: liveSteps, currentPaceSec, startRun, pauseRun, stopRun };
 }
